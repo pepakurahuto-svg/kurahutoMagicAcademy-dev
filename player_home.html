@@ -15,6 +15,17 @@
   <h1>クラフト魔法学院</h1>
   <p>ようこそ、プレイヤーさん！</p>
 
+<h2>あなたのキャラクター一覧</h2>
+
+<div id="charactersArea"></div>
+
+<div id="pagingArea">
+  <button id="prevPage">前のページ</button>
+  <span id="pageInfo"></span>
+  <button id="nextPage">次のページ</button>
+</div>
+
+<p id="status"></p>
   <button onclick="location.href='character_create.html'">キャラ作成</button>
   <button onclick="location.href='battle.html'">バトルへ</button>
   <button onclick="logout()">ログアウト</button>
@@ -29,6 +40,10 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+
+let characters = [];     // 全キャラ
+let currentPage = 1;     // 現在のページ
+const pageSize = 5;      // 1ページ5体
 
     // ログイン情報表示
     firebase.auth().onAuthStateChanged(async user => {
@@ -51,7 +66,82 @@
         // プレイヤー名が無い場合は作成画面へ
         location.href = "player_create.html";
       }
+
+        // 自分のキャラを取得
+  const snap = await db.collection("characters")
+    .where("playerId", "==", uid)
+    .orderBy("characterId", "asc")
+    .get();
+
+  characters = snap.docs.map(doc => doc.data());
+
+  renderPage();
     });
+
+// -------------------------
+// ページ描画
+// -------------------------
+function renderPage() {
+  const start = (currentPage - 1) * pageSize;
+  const end = start + pageSize;
+  const pageCharacters = characters.slice(start, end);
+
+  const area = document.getElementById("charactersArea");
+  area.innerHTML = "";
+
+  pageCharacters.forEach(ch => {
+    const div = document.createElement("div");
+    div.style.border = "1px solid #ccc";
+    div.style.margin = "10px";
+    div.style.padding = "10px";
+
+    div.innerHTML = `
+      <input type="checkbox" name="charSelect" value="${ch.characterId}">
+      <h3>キャラID：${ch.characterId}</h3>
+      <p>名前：${ch.name}</p>
+      <p>基本ダイス：${ch.baseDice}</p>
+
+      <h4>種目</h4>
+      <ul>
+        ${Object.keys(ch.events).map(i => `
+          <li>
+            種目${i}：ダイス ${ch.events[i].dice} ／ クリティカル ${ch.events[i].critical}
+          </li>
+        `).join("")}
+      </ul>
+
+      <p>作成日時：${ch.createdAt}</p>
+      <p>作成Ver：${ch.createdVersion}</p>
+      <p>プレイヤーID：${ch.playerId}</p>
+    `;
+
+    area.appendChild(div);
+  });
+
+  // ページ情報更新
+  const totalPages = Math.ceil(characters.length / pageSize);
+  document.getElementById("pageInfo").innerText =
+    `${currentPage} / ${totalPages}`;
+}
+
+// -------------------------
+// ページングボタン
+// -------------------------
+document.getElementById("prevPage").onclick = () => {
+  if (currentPage > 1) {
+    currentPage--;
+    renderPage();
+  }
+};
+
+document.getElementById("nextPage").onclick = () => {
+  const totalPages = Math.ceil(characters.length / pageSize);
+  if (currentPage < totalPages) {
+    currentPage++;
+    renderPage();
+  }
+};
+
 
     // ログアウト
     function logout() {
