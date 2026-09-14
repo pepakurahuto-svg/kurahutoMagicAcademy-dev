@@ -227,8 +227,8 @@
       const myMax = Math.max(...myRolls[myRolls.length - 1]);
       const enMax = Math.max(...enemyRolls[enemyRolls.length - 1]);
 
-      myAchieve = 10 * myX + myMax;
-      enemyAchieve = 10 * enX + enMax;
+      myAchieve = 10 * (myX - 1) + myMax;
+      enemyAchieve = 10 * (enX - 1) + enMax;
 
       const log = document.getElementById("battleLog");
       log.innerHTML += `<p>自分 達成値：${myAchieve}</p>`;
@@ -238,33 +238,38 @@
     // -------------------------
     // ダメージ計算
     // -------------------------
-    document.getElementById("damageBtn").onclick = () => {
-      const myT = Math.floor(myAchieve / 10);
-      const enT = Math.floor(enemyAchieve / 10);
+document.getElementById("damageBtn").onclick = () => {
+  // ダイス個数 = 10の位 + 1
+  const myDiceCount = Math.floor(myAchieve / 10) + 1;
+  const enDiceCount = Math.floor(enemyAchieve / 10) + 1;
 
-      const myDice = rollDice(1)[0];
-      const enDice = rollDice(1)[0];
+  // ダイスを複数振る
+  const myDiceArr = rollDice(myDiceCount);
+  const enDiceArr = rollDice(enDiceCount);
 
-      const myDamage = myT + myDice;
-      const enDamage = enT + enDice;
+  // ダメージは合計値
+  const myDamage = myDiceArr.reduce((a,b)=>a+b, 0);
+  const enDamage = enDiceArr.reduce((a,b)=>a+b, 0);
 
-      const log = document.getElementById("battleLog");
-      log.innerHTML += `<p>自分 ダメージ計算結果：${myT},${myDice}</p>`;
-      log.innerHTML += `<p>自分 ダメージ：${myDamage}</p>`;
-      log.innerHTML += `<p>相手 ダメージ計算結果：${enT},${enDice}</p>`;
-      log.innerHTML += `<p>相手 ダメージ：${enDamage}</p>`;
+  const log = document.getElementById("battleLog");
 
-      let winner = "";
-      if (myDamage > enDamage) {
-        winner = `${myChar.name}（自分）`;
-      } else if (myDamage < enDamage) {
-        winner = `${enemyChar.name}（相手）`;
-      } else {
-        winner = "引き分け";
-      }
+  log.innerHTML += `<p>自分 ダメージ計算結果：${myDiceArr.join(",")}</p>`;
+  log.innerHTML += `<p>自分 ダメージ：${myDamage}</p>`;
 
-      log.innerHTML += `<h3>勝者：${winner}</h3>`;
-    };
+  log.innerHTML += `<p>相手 ダメージ計算結果：${enDiceArr.join(",")}</p>`;
+  log.innerHTML += `<p>相手 ダメージ：${enDamage}</p>`;
+
+  let winner = "";
+  if (myDamage > enDamage) {
+    winner = `${myChar.name}（自分）`;
+  } else if (myDamage < enDamage) {
+    winner = `${enemyChar.name}（相手）`;
+  } else {
+    winner = "引き分け";
+  }
+
+  log.innerHTML += `<h3>勝者：${winner}</h3>`;
+};
 
   </script>
 </body>
