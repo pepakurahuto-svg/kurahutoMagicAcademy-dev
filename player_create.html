@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>クラフト魔法学院 - プレイヤー作成</title>
+</head>
+<body>
+  <!-- ログイン情報（右上） -->
+  <div id="userInfo" style="position: absolute; top: 10px; right: 10px;">
+    ログイン中：<span id="userEmail"></span>
+  </div>
+
+  <h1>プレイヤー作成</h1>
+  <p>ゲーム内で使用するプレイヤー名を入力してください。</p>
+
+  <input id="playerName" placeholder="プレイヤー名（必須）">
+  <button id="saveBtn">保存</button>
+
+  <p id="status"></p>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <!-- Firebase config -->
+  <script src="firebase-config.js"></script>
+  <script>
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // ログイン情報表示
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById("userEmail").innerText = user.email;
+      } else {
+        location.href = "index.html";
+      }
+    });
+
+    // 保存ボタン
+    document.getElementById("saveBtn").onclick = async () => {
+      const name = document.getElementById("playerName").value;
+
+      if (!name) {
+        alert("プレイヤー名は必須です");
+        return;
+      }
+
+      try {
+        const user = auth.currentUser;
+        if (!user) {
+          document.getElementById("status").innerText = "ログイン情報がありません。index.html へ戻ってください。";
+          return;
+        }
+
+        const uid = user.uid;
+
+        // Firestore にプレイヤー情報を保存
+        await db.collection("players").doc(uid).set({
+          name: name,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // 保存後 player_home.html へ
+        location.href = "player_home.html";
+
+      } catch (e) {
+        document.getElementById("status").innerText = "保存失敗: " + e.message;
+      }
+    };
+  </script>
+</body>
+</html>

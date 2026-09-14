@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>クラフト魔法学院 - ホーム</title>
+</head>
+<body>
+
+  <!-- ログイン情報（右上） -->
+  <div id="userInfo" style="position: absolute; top: 10px; right: 10px; text-align: right;">
+    <div id="playerName"></div>
+    <div>ログイン中：<span id="userEmail"></span></div>
+  </div>
+
+  <h1>クラフト魔法学院</h1>
+  <p>ようこそ、プレイヤーさん！</p>
+
+  <button onclick="location.href='character_create.html'">キャラ作成</button>
+  <button onclick="location.href='battle.html'">バトルへ</button>
+  <button onclick="logout()">ログアウト</button>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <!-- Firebase config -->
+  <script src="firebase-config.js"></script>
+  <script>
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // ログイン情報表示
+    firebase.auth().onAuthStateChanged(async user => {
+      if (!user) {
+        location.href = "index.html";
+        return;
+      }
+
+      // メールアドレス表示
+      document.getElementById("userEmail").innerText = user.email;
+
+      // プレイヤー名取得
+      const uid = user.uid;
+      const playerDoc = await db.collection("players").doc(uid).get();
+
+      if (playerDoc.exists) {
+        const name = playerDoc.data().name;
+        document.getElementById("playerName").innerText = name + " さん";
+      } else {
+        // プレイヤー名が無い場合は作成画面へ
+        location.href = "player_create.html";
+      }
+    });
+
+    // ログアウト
+    function logout() {
+      auth.signOut().then(() => {
+        location.href = "index.html";
+      });
+    }
+  </script>
+
+</body>
+</html>
