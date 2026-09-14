@@ -83,11 +83,18 @@
           location.href = "player_create.html";
         }
       }catch(e) {
+  console.log("1535"); // デバッグ用
   console.log(e); // デバッグ用
 
   let msg = "";
 
-  // Firebase Auth JS SDK の内部エラー
+  // ① JS SDK の標準エラー
+  if (e.code === "auth/invalid-email") {
+    status.innerText = "メールアドレスの形式が正しくありません。";
+    return;
+  }
+
+  // ② JS SDK が内部エラーとして REST API JSON を返すケース
   if (e.code === "auth/internal-error") {
     try {
       const parsed = JSON.parse(e.message);
@@ -99,7 +106,7 @@
     msg = e.message;
   }
 
-  // メッセージに応じて分岐
+  // REST API のエラーメッセージに応じて分岐
   if (msg === "INVALID_LOGIN_CREDENTIALS") {
     status.innerText = "メールアドレスまたはパスワードが違います。";
   } else if (msg === "MISSING_EMAIL") {
