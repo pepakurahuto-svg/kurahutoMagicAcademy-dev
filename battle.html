@@ -68,6 +68,9 @@
     let myAchieve = null;
     let enemyAchieve = null;
 
+    let myDamage = null;
+    let enDamage = null;
+
     // -------------------------
     // キャラ情報読み込み
     // -------------------------
@@ -233,6 +236,8 @@
       const log = document.getElementById("battleLog");
       log.innerHTML += `<p>自分 達成値：${myAchieve}</p>`;
       log.innerHTML += `<p>相手 達成値：${enemyAchieve}</p>`;
+
+      winnerAchieve();
     }
 
     // -------------------------
@@ -248,8 +253,8 @@ document.getElementById("damageBtn").onclick = () => {
   const enDiceArr = rollDice(enDiceCount);
 
   // ダメージは合計値
-  const myDamage = myDiceArr.reduce((a,b)=>a+b, 0);
-  const enDamage = enDiceArr.reduce((a,b)=>a+b, 0);
+  myDamage = myDiceArr.reduce((a,b)=>a+b, 0);
+  enDamage = enDiceArr.reduce((a,b)=>a+b, 0);
 
   const log = document.getElementById("battleLog");
 
@@ -258,7 +263,25 @@ document.getElementById("damageBtn").onclick = () => {
 
   log.innerHTML += `<p>相手 ダメージ計算結果：${enDiceArr.join(",")}</p>`;
   log.innerHTML += `<p>相手 ダメージ：${enDamage}</p>`;
+  winnerDamage();
+};
+    // -------------------------
+    // 勝者判定
+    // -------------------------
+    function winnerAchieve() {
+  let winner = "";
+  if (myAchieve > enemyAchieve) {
+    winner = `${myChar.name}（自分）`;
+  } else if (myAchieve < enemyAchieve) {
+    winner = `${enemyChar.name}（相手）`;
+  } else {
+    winner = "引き分け";
+  }
 
+  log.innerHTML += `<h3>勝者：${winner}</h3>`;
+    }
+
+    function winnerDamage() {
   let winner = "";
   if (myDamage > enDamage) {
     winner = `${myChar.name}（自分）`;
@@ -269,7 +292,7 @@ document.getElementById("damageBtn").onclick = () => {
   }
 
   log.innerHTML += `<h3>勝者：${winner}</h3>`;
-};
+    }
 
   </script>
 </body>
