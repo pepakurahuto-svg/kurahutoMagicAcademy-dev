@@ -206,11 +206,12 @@
       }
 
       const log = document.getElementById("battleLog");
-      const turn = myRolls.length;
+      const myturn = myRolls.length;
+      const enturn = enemyRolls.length;
       if (myNext.length > 0)
-        log.innerHTML += `<p>${renderRollResult(`自分 ${turn}回目ダイス結果`, myNext, myCrit)}</p>`;
+        log.innerHTML += `<p>${renderRollResult(`自分 ${myturn}回目ダイス結果`, myNext, myCrit)}</p>`;
       if (enNext.length > 0)
-        log.innerHTML += `<p>${renderRollResult(`相手 ${turn}回目ダイス結果`, enNext, enCrit)}</p>`;
+        log.innerHTML += `<p>${renderRollResult(`相手 ${enturn}回目ダイス結果`, enNext, enCrit)}</p>`;
 
       // 再ロール終了判定
       if (myCriticalTargets.length === 0 && enemyCriticalTargets.length === 0) {
