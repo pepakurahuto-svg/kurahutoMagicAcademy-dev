@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>キャラクター作成</title>
+  <style>
+    body { font-family: sans-serif; }
+    .event-block { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+    .hidden { display: none; }
+    button { margin: 3px; }
+  </style>
+</head>
+
+<body>
+  <h1>キャラクター作成</h1>
+
+  <label>キャラ名：</label>
+  <input type="text" id="charName">
+
+  <p>経験値：360</p>
+  <p>残り経験値：<span id="expRemain">360</span></p>
+
+  <h2>基本ダイス</h2>
+  <p>
+    基本ダイス数：<span id="baseDice">4</span>
+    <button id="baseDicePlus">+1</button>
+    <button id="baseDiceMinus">-1</button>
+  </p>
+
+  <h2>種目</h2>
+  <div id="eventsArea"></div>
+
+  <button id="createBtn">キャラ作成</button>
+
+  <!-- 確認ダイアログ -->
+  <div id="confirmArea" class="hidden">
+    <p>経験値が残り <span id="confirmExp"></span> です。よろしいですか？</p>
+    <button id="confirmBack">戻る</button>
+    <button id="confirmOk">確定</button>
+  </div>
+
+  <!-- 作成結果 -->
+  <div id="resultArea" class="hidden">
+    <p>キャラが作成されました！</p>
+    <p>キャラID：<span id="resultId"></span></p>
+    <button id="backHome">プレイヤーホームに戻る</button>
+  </div>
+
+  <p id="status"></p>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="version.js"></script>
+
+  <script>
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // -------------------------
+    // 初期値
+    // -------------------------
+    let exp = 360;
+    let baseDice = 4;
+
+    let events = {
+      1: { dice: 0, critical: 10 },
+      2: { dice: 0, critical: 10 },
+      3: { dice: 0, critical: 10 },
+      4: { dice: 0, critical: 10 }
+    };
+
+    // -------------------------
+    // UI生成（種目）
+    // -------------------------
+    const eventsArea = document.getElementById("eventsArea");
+
+    for (let i = 1; i <= 4; i++) {
+      const div = document.createElement("div");
+      div.className = "event-block";
+      div.innerHTML = `
+        <h3>種目 ${i}</h3>
+        ダイス：<span id="dice${i}">0</span>
+        <button id="dicePlus${i}">+1</button>
+        <button id="diceMinus${i}">-1</button>
+        <br>
+        クリティカル：<span id="critical${i}">10</span>
+        <button id="criticalPlus${i}">+1</button>
+        <button id="criticalMinus${i}">-1</button>
+      `;
+      eventsArea.appendChild(div);
+    }
+
+    // -------------------------
+    // UI更新
+    // -------------------------
+    function updateUI() {
+      document.getElementById("expRemain").innerText = exp;
+      document.getElementById("baseDice").innerText = baseDice;
+
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById(`dice${i}`).innerText = events[i].dice;
+        document.getElementById(`critical${i}`).innerText = events[i].critical;
+      }
+    }
+
+    // -------------------------
+    // 基本ダイス増減
+    // -------------------------
+    document.getElementById("baseDicePlus").onclick = () => {
+      if (exp >= 36) {
+        baseDice++;
+        exp -= 36;
+        updateUI();
+      }
+    };
+
+    document.getElementById("baseDiceMinus").onclick = () => {
+      if (baseDice > 4) {
+        baseDice--;
+        exp += 36;
+        updateUI();
+      }
+    };
+
+    // -------------------------
+    // 種目ダイス・クリティカル増減
+    // -------------------------
+    for (let i = 1; i <= 4; i++) {
+      // dice +1
+      document.getElementById(`dicePlus${i}`).onclick = () => {
+        if (exp >= 10) {
+          events[i].dice++;
+          exp -= 10;
+          updateUI();
+        }
+      };
+
+      // dice -1
+      document.getElementById(`diceMinus${i}`).onclick = () => {
+        if (events[i].dice > 0) {
+          events[i].dice--;
+          exp += 10;
+          updateUI();
+        }
+      };
+
+      // critical +1（初期値より増やせない）
+      document.getElementById(`criticalPlus${i}`).onclick = () => {
+        if (events[i].critical < 10) {
+          events[i].critical++;
+          exp += 50;
+          updateUI();
+        }
+      };
+
+      // critical -1
+      document.getElementById(`criticalMinus${i}`).onclick = () => {
+        if (events[i].critical > 0 && exp >= 50) {
+          events[i].critical--;
+          exp -= 50;
+          updateUI();
+        }
+      };
+    }
+
+    // -------------------------
+    // 作成ボタン → 確認ダイアログ
+    // -------------------------
+    document.getElementById("createBtn").onclick = () => {
+      document.getElementById("confirmExp").innerText = exp;
+      document.getElementById("confirmArea").classList.remove("hidden");
+    };
+
+    document.getElementById("confirmBack").onclick = () => {
+      document.getElementById("confirmArea").classList.add("hidden");
+    };
+
+    // -------------------------
+    // キャラ作成確定
+    // -------------------------
+    document.getElementById("confirmOk").onclick = async () => {
+      const charName = document.getElementById("charName").value;
+      if (!charName) {
+        alert("キャラ名を入力してください");
+        return;
+      }
+
+      const playerId = auth.currentUser.uid;
+
+      // キャラID採番
+      const maxIdSnap = await db.collection("characters")
+        .orderBy("characterId", "desc")
+        .limit(1)
+        .get();
+
+      let newId = 1;
+      if (!maxIdSnap.empty) {
+        newId = maxIdSnap.docs[0].data().characterId + 1;
+      }
+
+      const characterData = {
+        characterId: newId,
+        name: charName,
+        baseDice: baseDice,
+        events: events,
+        createdAt: new Date().toISOString(),
+        createdVersion: GAME_VERSION,
+        playerId: playerId
+      };
+
+      await db.collection("characters").doc(String(newId)).set(characterData);
+
+      // 結果表示
+      document.getElementById("resultId").innerText = newId;
+      document.getElementById("resultArea").classList.remove("hidden");
+
+      // ボタン無効化
+      disableAllButtons();
+    };
+
+    function disableAllButtons() {
+      const buttons = document.querySelectorAll("button");
+      buttons.forEach(btn => {
+        if (btn.id !== "backHome") btn.disabled = true;
+      });
+    }
+
+    // -------------------------
+    // ホームへ戻る
+    // -------------------------
+    document.getElementById("backHome").onclick = () => {
+      location.href = "player_home.html";
+    };
+
+  </script>
+</body>
+</html>
