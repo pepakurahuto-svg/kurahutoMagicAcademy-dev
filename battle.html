@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>バトル</title>
+  <style>
+    body { font-family: sans-serif; }
+    .charBox { border:1px solid #ccc; padding:10px; width:45%; }
+    .flex { display:flex; justify-content:space-between; }
+    .red { color:red; font-weight:bold; }
+    #battleLog p { margin:4px 0; }
+  </style>
+</head>
+
+<body>
+  <h1>バトル</h1>
+
+  <div class="flex">
+    <div class="charBox">
+      <h2>自分</h2>
+      <div id="myCharInfo"></div>
+    </div>
+
+    <div class="charBox">
+      <h2>相手</h2>
+      <div id="enemyCharInfo"></div>
+    </div>
+  </div>
+
+  <h3>種目選択</h3>
+  <select id="eventSelect">
+    <option value="1">種目1</option>
+    <option value="2">種目2</option>
+    <option value="3">種目3</option>
+    <option value="4">種目4</option>
+  </select>
+
+  <br><br>
+
+  <button id="rollBtn">ダイスロール</button>
+  <button id="rerollBtn" disabled>再ロール</button>
+  <button id="damageBtn" disabled>ダメージ計算</button>
+
+  <h3>バトルログ</h3>
+  <div id="battleLog"></div>
+
+  <button onclick="location.href='player_home.html'">プレイヤーホームへ戻る</button>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <script>
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let myChar = null;
+    let enemyChar = null;
+
+    let myRolls = [];        // 各回のロール結果（配列の配列）
+    let enemyRolls = [];
+    let myCriticalTargets = [];     // 次回再ロール対象
+    let enemyCriticalTargets = [];
+
+    let myAchieve = null;
+    let enemyAchieve = null;
+
+    // -------------------------
+    // キャラ情報読み込み
+    // -------------------------
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        location.href = "index.html";
+        return;
+      }
+
+      const myId = sessionStorage.getItem("selectedCharId");
+      if (!myId) {
+        alert("キャラが選択されていません");
+        location.href = "player_home.html";
+        return;
+      }
+
+      const mySnap = await db.collection("characters").doc(myId).get();
+      myChar = mySnap.data();
+
+      const enemySnap = await db.collection("characters").doc("1").get();
+      enemyChar = enemySnap.data();
+
+      renderCharInfo();
+    });
+
+    // -------------------------
+    // キャラ情報表示
+    // -------------------------
+    function renderCharInfo() {
+      const myArea = document.getElementById("myCharInfo");
+      const enArea = document.getElementById("enemyCharInfo");
+
+      myArea.innerHTML = `
+        <p>ID：${myChar.characterId}</p>
+        <p>名前：${myChar.name}</p>
+        <p>基本ダイス：${myChar.baseDice}</p>
+        <h4>種目</h4>
+        <ul>
+          ${Object.keys(myChar.events).map(i =>
+            `<li>種目${i}：ダイス ${myChar.events[i].dice} ／ クリティカル ${myChar.events[i].critical}</li>`
+          ).join("")}
+        </ul>
+      `;
+
+      enArea.innerHTML = `
+        <p>ID：${enemyChar.characterId}</p>
+        <p>名前：${enemyChar.name}</p>
+        <p>基本ダイス：${enemyChar.baseDice}</p>
+        <h4>種目</h4>
+        <ul>
+          ${Object.keys(enemyChar.events).map(i =>
+            `<li>種目${i}：ダイス ${enemyChar.events[i].dice} ／ クリティカル ${enemyChar.events[i].critical}</li>`
+          ).join("")}
+        </ul>
+      `;
+    }
+
+    // -------------------------
+    // ダイスロール処理
+    // -------------------------
+    function rollDice(count) {
+      const arr = [];
+      for (let i = 0; i < count; i++) {
+        arr.push(Math.floor(Math.random() * 10) + 1);
+      }
+      return arr.sort((a,b)=>a-b);
+    }
+
+    function renderRollResult(label, arr, critical) {
+      return `${label}：` + arr.map(v =>
+        v >= critical ? `<span class="red">${v}</span>` : v
+      ).join(",");
+    }
+
+    // -------------------------
+    // 1回目ロール
+    // -------------------------
+    document.getElementById("rollBtn").onclick = () => {
+      const eventNo = document.getElementById("eventSelect").value;
+
+      myRolls = [];
+      enemyRolls = [];
+      myCriticalTargets = [];
+      enemyCriticalTargets = [];
+      myAchieve = null;
+      enemyAchieve = null;
+
+      const myCount = myChar.baseDice + myChar.events[eventNo].dice;
+      const enCount = enemyChar.baseDice + enemyChar.events[eventNo].dice;
+
+      const myFirst = rollDice(myCount);
+      const enFirst = rollDice(enCount);
+
+      myRolls.push(myFirst);
+      enemyRolls.push(enFirst);
+
+      const myCrit = myChar.events[eventNo].critical;
+      const enCrit = enemyChar.events[eventNo].critical;
+
+      myCriticalTargets = myFirst.filter(v => v >= myCrit);
+      enemyCriticalTargets = enFirst.filter(v => v >= enCrit);
+
+      const log = document.getElementById("battleLog");
+      log.innerHTML = "";
+      log.innerHTML += `<p>${renderRollResult("自分 1回目ダイス結果", myFirst, myCrit)}</p>`;
+      log.innerHTML += `<p>${renderRollResult("相手 1回目ダイス結果", enFirst, enCrit)}</p>`;
+
+      document.getElementById("rerollBtn").disabled = (myCriticalTargets.length === 0 && enemyCriticalTargets.length === 0);
+      document.getElementById("damageBtn").disabled = true;
+    };
+
+    // -------------------------
+    // 再ロール
+    // -------------------------
+    document.getElementById("rerollBtn").onclick = () => {
+      const eventNo = document.getElementById("eventSelect").value;
+      const myCrit = myChar.events[eventNo].critical;
+      const enCrit = enemyChar.events[eventNo].critical;
+
+      let myNext = [];
+      let enNext = [];
+
+      if (myCriticalTargets.length > 0) {
+        myNext = rollDice(myCriticalTargets.length);
+        myRolls.push(myNext);
+        myCriticalTargets = myNext.filter(v => v >= myCrit);
+      }
+
+      if (enemyCriticalTargets.length > 0) {
+        enNext = rollDice(enemyCriticalTargets.length);
+        enemyRolls.push(enNext);
+        enemyCriticalTargets = enNext.filter(v => v >= enCrit);
+      }
+
+      const log = document.getElementById("battleLog");
+      const turn = myRolls.length;
+      if (myNext.length > 0)
+        log.innerHTML += `<p>${renderRollResult(`自分 ${turn}回目ダイス結果`, myNext, myCrit)}</p>`;
+      if (enNext.length > 0)
+        log.innerHTML += `<p>${renderRollResult(`相手 ${turn}回目ダイス結果`, enNext, enCrit)}</p>`;
+
+      // 再ロール終了判定
+      if (myCriticalTargets.length === 0 && enemyCriticalTargets.length === 0) {
+        calcAchieve();
+        document.getElementById("rerollBtn").disabled = true;
+        document.getElementById("damageBtn").disabled = false;
+      }
+    };
+
+    // -------------------------
+    // 達成値計算
+    // -------------------------
+    function calcAchieve() {
+      const myX = myRolls.length;
+      const enX = enemyRolls.length;
+
+      const myMax = Math.max(...myRolls[myRolls.length - 1]);
+      const enMax = Math.max(...enemyRolls[enemyRolls.length - 1]);
+
+      myAchieve = 10 * myX + myMax;
+      enemyAchieve = 10 * enX + enMax;
+
+      const log = document.getElementById("battleLog");
+      log.innerHTML += `<p>自分 達成値：${myAchieve}</p>`;
+      log.innerHTML += `<p>相手 達成値：${enemyAchieve}</p>`;
+    }
+
+    // -------------------------
+    // ダメージ計算
+    // -------------------------
+    document.getElementById("damageBtn").onclick = () => {
+      const myT = Math.floor(myAchieve / 10);
+      const enT = Math.floor(enemyAchieve / 10);
+
+      const myDice = rollDice(1)[0];
+      const enDice = rollDice(1)[0];
+
+      const myDamage = myT + myDice;
+      const enDamage = enT + enDice;
+
+      const log = document.getElementById("battleLog");
+      log.innerHTML += `<p>自分 ダメージ計算結果：${myT},${myDice}</p>`;
+      log.innerHTML += `<p>自分 ダメージ：${myDamage}</p>`;
+      log.innerHTML += `<p>相手 ダメージ計算結果：${enT},${enDice}</p>`;
+      log.innerHTML += `<p>相手 ダメージ：${enDamage}</p>`;
+
+      let winner = "";
+      if (myDamage > enDamage) {
+        winner = `${myChar.name}（自分）`;
+      } else if (myDamage < enDamage) {
+        winner = `${enemyChar.name}（相手）`;
+      } else {
+        winner = "引き分け";
+      }
+
+      log.innerHTML += `<h3>勝者：${winner}</h3>`;
+    };
+
+  </script>
+</body>
+</html>
