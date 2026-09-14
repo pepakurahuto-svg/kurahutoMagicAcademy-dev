@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>クラフト魔法学院 - ログイン</title>
+</head>
+<body>
+  <h1>クラフト魔法学院</h1>
+  <p>クラフト魔法学院へようこそ。</p>
+  <p>魔法学院の生徒になって様々な魔法で他の生徒と競おう。</p>
+
+  <h2>ログイン方法を選択してください</h2>
+
+  <!-- Googleログイン -->
+  <button id="googleLoginBtn">Googleでログイン</button>
+
+  <hr>
+
+  <h3>その他のログイン方法</h3>
+
+  <!-- メールログイン -->
+  <div>
+    <h4>メールでログイン</h4>
+    <input id="loginEmail" placeholder="メールアドレス">
+    <input id="loginPassword" type="password" placeholder="パスワード">
+    <button id="emailLoginBtn">ログイン</button>
+  </div>
+
+  <hr>
+
+  <!-- 新規アカウント作成 -->
+  <div>
+    <h4>メールで新規アカウント作成</h4>
+    <input id="newEmail" placeholder="メールアドレス（必須）">
+    <input id="newPassword" type="password" placeholder="パスワード（必須）">
+    <button id="createAccountBtn">アカウント作成</button>
+  </div>
+
+  <p id="status"></p>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <script>
+    // ★ Firebase設定を貼る
+  const firebaseConfig = {
+    apiKey: "AIzaSyC1KURGkhvMwdsBxx7hqDs6OkZmZwlLo48",
+    authDomain: "kurahutomagicacademy.firebaseapp.com",
+    projectId: "kurahutomagicacademy",
+    storageBucket: "kurahutomagicacademy.firebasestorage.app",
+    messagingSenderId: "523355656329",
+    appId: "1:523355656329:web:6f4d6574a2aae799b6f658"
+  };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Googleログイン
+    document.getElementById("googleLoginBtn").onclick = async () => {
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        const result = await auth.signInWithPopup(provider);
+        const uid = result.user.uid;
+
+        const playerDoc = await db.collection("players").doc(uid).get();
+        if (playerDoc.exists) {
+          location.href = "player_home.html";
+        } else {
+          location.href = "player_create.html";
+        }
+      } catch (e) {
+        document.getElementById("status").innerText = "ログイン失敗: " + e.message;
+      }
+    };
+
+    // メールログイン
+    document.getElementById("emailLoginBtn").onclick = async () => {
+      const email = document.getElementById("loginEmail").value;
+      const password = document.getElementById("loginPassword").value;
+
+      try {
+        const result = await auth.signInWithEmailAndPassword(email, password);
+        const uid = result.user.uid;
+
+        const playerDoc = await db.collection("players").doc(uid).get();
+        if (playerDoc.exists) {
+          location.href = "player_home.html";
+        } else {
+          location.href = "player_create.html";
+        }
+      } catch (e) {
+        document.getElementById("status").innerText = "ログイン失敗: " + e.message;
+      }
+    };
+
+    // 新規アカウント作成
+    document.getElementById("createAccountBtn").onclick = async () => {
+      const email = document.getElementById("newEmail").value;
+      const password = document.getElementById("newPassword").value;
+
+      if (!email || !password) {
+        alert("メールとパスワードは必須です");
+        return;
+      }
+
+      try {
+        const result = await auth.createUserWithEmailAndPassword(email, password);
+        const uid = result.user.uid;
+
+        // プレイヤー名はまだ無いので player_create.html へ
+        location.href = "player_create.html";
+      } catch (e) {
+        document.getElementById("status").innerText = "アカウント作成失敗: " + e.message;
+      }
+    };
+  </script>
+</body>
+</html>
