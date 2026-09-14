@@ -45,6 +45,8 @@
   <!-- Firebase config -->
   <script src="firebase-config.js"></script>
   <script>
+    const status = document.getElementById("status");
+
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
@@ -83,7 +85,7 @@
           location.href = "player_create.html";
         }
       }catch(e) {
-  console.log("1535"); // デバッグ用
+  console.log("1543"); // デバッグ用
   console.log(e); // デバッグ用
 
   let msg = "";
