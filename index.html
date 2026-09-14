@@ -85,18 +85,29 @@
       }catch(e) {
   console.log(e); // デバッグ用
 
-  if (e.code === "auth/user-not-found") {
-    status.innerText = "このメールアドレスのアカウントは存在しません。新規作成してください。";
-  } else if (e.code === "auth/wrong-password") {
-    status.innerText = "パスワードが違います。";
-  } else if (e.code === "auth/invalid-email") {
-    status.innerText = "メールアドレスの形式が正しくありません。";
-  } else if (e.code === "auth/missing-email") {
-    status.innerText = "メールアドレスを入力してください。";
-  } else if (e.code === "auth/too-many-requests") {
-    status.innerText = "ログイン試行が多すぎます。しばらく時間を置いて再度お試しください。";
+  let msg = "";
+
+  // Firebase Auth JS SDK の内部エラー
+  if (e.code === "auth/internal-error") {
+    try {
+      const parsed = JSON.parse(e.message);
+      msg = parsed.error.message;  // INVALID_LOGIN_CREDENTIALS など
+    } catch {
+      msg = e.message;
+    }
   } else {
-    status.innerText = "ログイン失敗: " + e.message;
+    msg = e.message;
+  }
+
+  // メッセージに応じて分岐
+  if (msg === "INVALID_LOGIN_CREDENTIALS") {
+    status.innerText = "メールアドレスまたはパスワードが違います。";
+  } else if (msg === "MISSING_EMAIL") {
+    status.innerText = "メールアドレスを入力してください。";
+  } else if (msg === "INVALID_EMAIL") {
+    status.innerText = "メールアドレスの形式が正しくありません。";
+  } else {
+    status.innerText = "ログイン失敗: " + msg;
   }
 }
     };
