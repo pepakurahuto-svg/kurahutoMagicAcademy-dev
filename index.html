@@ -60,7 +60,8 @@
         const result = await auth.signInWithPopup(provider);
         const uid = result.user.uid;
 
-        playerDoc = await db.collection("players").doc(uid).get();
+        playerRef = db.collection("players").doc(uid);
+        playerDoc = await playerRef.get();
         if (playerDoc.exists) {
           await updatePlayerData();
           location.href = "player_home.html";
@@ -80,8 +81,9 @@
       try {
         const result = await auth.signInWithEmailAndPassword(email, password);
         const uid = result.user.uid;
-
-        playerDoc = await db.collection("players").doc(uid).get();
+        
+        playerRef = db.collection("players").doc(uid);
+        playerDoc = await playerRef.get();
         if (playerDoc.exists) {
           await updatePlayerData();
           location.href = "player_home.html";
