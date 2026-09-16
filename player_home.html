@@ -68,6 +68,7 @@
   </div>
 
   <!-- チャンピオン表示 -->
+  <h2>チャンピオン一覧</h2>
   <div id="championsArea"></div>
 
   <h2>あなたのキャラクター一覧</h2>
@@ -254,7 +255,6 @@
     // -------------------------
     async function loadChampions() {
       const area = document.getElementById("championsArea");
-      area.innerHTML = "<h2>チャンピオン一覧</h2><br>";
 
       for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
         const attrName = MAGIC_ATTRIBUTES[attrId];
