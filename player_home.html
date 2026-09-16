@@ -232,18 +232,15 @@
         div.innerHTML = `
           <input type="checkbox" name="charSelect" value="${ch.characterId}">
           <h3>${ch.name}</h3>
-
           <p>基礎魔力量：${ch.baseDice}</p>
-
           <h4>属性</h4>
           <ul>
             ${Object.keys(ch.events).map(i => `
               <li>
-                属性：${MAGIC_ATTRIBUTES[i]} ／ レベル ${ch.events[i].dice} ／ 発動抵抗 ${ch.events[i].critical}
+                ${MAGIC_ATTRIBUTES[i]} ／ レベル ${ch.events[i].dice} ／ 発動抵抗 ${ch.events[i].critical}
               </li>
             `).join("")}
           </ul>
-
           <p>作成日時：${ch.createdAt}</p>
           <p>作成Ver：${ch.createdVersion}</p>
         `;
