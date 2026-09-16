@@ -17,15 +17,33 @@
     }
     #championsArea {
       display: flex;
-      overflow-x: auto;
-      gap: 10px;
+      overflow-x: auto;   /* 横スクロール維持 */
+      gap: 16px;          /* カード間の余白を少し広げる */
+      padding: 10px;      /* 内側に余白 */
       white-space: nowrap;
     }
+
     .champCard {
-      flex: 0 0 auto;
-      width: 200px;
+      flex: 0 0 auto;     /* 横スクロール用 */
+      width: 260px;       /* 情報量に合わせて少し広げる */
+      border: 2px solid #ddd; /* 枠線を太めに */
+      border-radius: 10px;    /* 角丸でカード感UP */
+      padding: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15); /* 影で立体感 */
+      background: var(--attr-color); /* ← JSから渡す色 */
     }
-  
+
+    .champCard h3 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .champCard h4 {
+      margin-bottom: 4px;
+      color: #555;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 2px;
+    }
   </style>
 </head>
 <body>
@@ -236,7 +254,7 @@
     // -------------------------
     async function loadChampions() {
       const area = document.getElementById("championsArea");
-      area.innerHTML = "<h2>チャンピオン一覧</h2>";
+      area.innerHTML = "<h2>チャンピオン一覧</h2><br>";
 
       for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
         const attrName = MAGIC_ATTRIBUTES[attrId];
@@ -276,6 +294,10 @@
         // まとめて表示
         const div = document.createElement("div");
         div.className = "champCard";
+
+        // ★ 属性カラーを適用（ここが今回の追加ポイント）
+        div.style.setProperty("--attr-color", MAGIC_ATTRIBUTE_COLORS[attrId]);
+
         div.innerHTML = `
           <h3>属性：${attrName}</h3>
           ${champHtml}
@@ -285,10 +307,10 @@
       }
     }
 
-// ページ読み込み時に実行
-window.onload = () => {
-  loadChampions();
-};
+    // ページ読み込み時に実行
+    window.onload = () => {
+      loadChampions();
+    };
 
     // ログアウト
     function logout() {
