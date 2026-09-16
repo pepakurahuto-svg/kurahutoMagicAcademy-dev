@@ -285,6 +285,15 @@
         if (champSnap.exists) {
           const data = champSnap.data();
           champChar = await loadCharacterInfo(data.championId);
+          // ★ 属性ごとの critical を取得
+          const critical = champChar.events && champChar.events[attrId]
+            ? champChar.events[attrId].critical
+            : "不明";
+
+          // ★ 属性ごとの dice を取得
+          const dice = champChar.events && champChar.events[attrId]
+            ? champChar.events[attrId].dice
+            : "不明";
 
           if (champChar) {
             const creatorName = await loadPlayerName(champChar.playerId);
@@ -294,9 +303,9 @@
                 <strong>勝ち抜きチャンピオン：</strong><br>
                 キャラ名：${champChar.name}<br>
                 作成者：${creatorName}<br>
-                基本魔力：${champChar.baseMagic}<br>
-                ダイス：${champChar.baseDice}<br>
-                クリティカル：${champChar.critical}<br>
+                基礎魔力量：${champChar.baseDice}<br>
+                レベル：${dice}}<br>
+                発動抵抗：${critical}<br>
                 連勝数：${data.winStreak}
               </p>
             `;
@@ -315,6 +324,15 @@
         if (maxSnap.exists) {
           const data = maxSnap.data();
           const maxChar = await loadCharacterInfo(data.championId);
+          // ★ 属性ごとの critical を取得
+          const critical = maxChar.events && maxChar.events[attrId]
+            ? maxChar.events[attrId].critical
+            : "不明";
+
+          // ★ 属性ごとの dice を取得
+          const dice = maxChar.events && maxChar.events[attrId]
+            ? maxChar.events[attrId].dice
+            : "不明";
 
           if (maxChar) {
             const creatorName = await loadPlayerName(maxChar.playerId);
@@ -324,9 +342,9 @@
                 <strong>最大達成値チャンピオン：</strong><br>
                 キャラ名：${maxChar.name}<br>
                 作成者：${creatorName}<br>
-                基本魔力：${maxChar.baseMagic}<br>
-                ダイス：${maxChar.baseDice}<br>
-                クリティカル：${maxChar.critical}<br>
+                基礎魔力量：${maxChar.baseDice}<br>
+                レベル：${dice}}<br>
+                発動抵抗：${critical}<br>
                 最大達成値：${data.maxAchieve}
               </p>
             `;
