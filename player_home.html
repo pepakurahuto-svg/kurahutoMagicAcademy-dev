@@ -226,6 +226,7 @@
 
       pageCharacters.forEach(ch => {
         const div = document.createElement("div");
+        const createdAtLocal = ch.createdAt.toDate().toLocaleString();
         div.className = "myCharCard";
 
         div.innerHTML = `
@@ -240,7 +241,7 @@
               </li>
             `).join("")}
           </ul>
-          <p>作成日時：${ch.createdAt}</p>
+          <p>作成日時：${createdAtLocal}</p>
           <p>作成Ver：${ch.createdVersion}</p>
         `;
         area.appendChild(div);
