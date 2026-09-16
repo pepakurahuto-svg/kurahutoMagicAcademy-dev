@@ -256,21 +256,53 @@
     async function loadChampions() {
       const area = document.getElementById("championsArea");
 
+      // ★ キャラ情報を取得
+      async function loadCharacterInfo(charId) {
+        const charSnap = await db.collection("characters")
+          .doc(String(charId))
+          .get();
+
+        return charSnap.exists ? charSnap.data() : null;
+      }
+
+      // ★ プレイヤー名を取得
+      async function loadPlayerName(playerId) {
+        const playerSnap = await db.collection("players")
+          .doc(playerId)
+          .get();
+
+        return playerSnap.exists ? playerSnap.data().name : "不明なプレイヤー";
+      }
+
       for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
         const attrName = MAGIC_ATTRIBUTES[attrId];
 
         // 勝ち抜きチャンピオン
         const champSnap = await db.collection("champions").doc(attrId).get();
         let champHtml = "";
+        let champChar = null;
+
         if (champSnap.exists) {
           const data = champSnap.data();
-          champHtml = `
-            <p>
-              <strong>勝ち抜きチャンピオン：</strong><br>
-              キャラID：${data.championId}<br>
-              連勝数：${data.winStreak}
-            </p>
-          `;
+          champChar = await loadCharacterInfo(data.championId);
+
+          if (champChar) {
+            const creatorName = await loadPlayerName(champChar.playerId);
+
+            champHtml = `
+              <p>
+                <strong>勝ち抜きチャンピオン：</strong><br>
+                キャラ名：${champChar.name}<br>
+                作成者：${creatorName}<br>
+                基本魔力：${champChar.baseMagic}<br>
+                ダイス：${champChar.baseDice}<br>
+                クリティカル：${champChar.critical}<br>
+                連勝数：${data.winStreak}
+              </p>
+            `;
+          } else {
+            champHtml = `<p>勝ち抜きチャンピオン：キャラ情報が見つかりません</p>`;
+          }
         } else {
           champHtml = `<p>勝ち抜きチャンピオン：未設定</p>`;
         }
@@ -278,15 +310,29 @@
         // 最大達成値チャンピオン
         const maxSnap = await db.collection("maxAchieveChampions").doc(attrId).get();
         let maxHtml = "";
+        let maxChar = null;
+
         if (maxSnap.exists) {
           const data = maxSnap.data();
-          maxHtml = `
-            <p>
-              <strong>最大達成値チャンピオン：</strong><br>
-              キャラID：${data.championId}<br>
-              最大達成値：${data.maxAchieve}
-            </p>
-          `;
+          const maxChar = await loadCharacterInfo(data.championId);
+
+          if (maxChar) {
+            const creatorName = await loadPlayerName(maxChar.playerId);
+
+            maxHtml = `
+              <p>
+                <strong>最大達成値チャンピオン：</strong><br>
+                キャラ名：${maxChar.name}<br>
+                作成者：${creatorName}<br>
+                基本魔力：${maxChar.baseMagic}<br>
+                ダイス：${maxChar.baseDice}<br>
+                クリティカル：${maxChar.critical}<br>
+                最大達成値：${data.maxAchieve}
+              </p>
+            `;
+          } else {
+            maxHtml = `<p>最大達成値チャンピオン：キャラ情報が見つかりません</p>`;
+          }
         } else {
           maxHtml = `<p>最大達成値チャンピオン：未設定</p>`;
         }
@@ -295,7 +341,7 @@
         const div = document.createElement("div");
         div.className = "champCard";
 
-        // ★ 属性カラーを適用（ここが今回の追加ポイント）
+        // ★ 属性カラーを適用
         div.style.setProperty("--attr-color", MAGIC_ATTRIBUTE_COLORS[attrId]);
 
         div.innerHTML = `
