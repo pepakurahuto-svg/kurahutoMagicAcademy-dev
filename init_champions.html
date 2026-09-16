@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>チャンピオン初期化</title>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+  <!-- Firebase設定（既存の設定ファイル） -->
+  <script src="firebase_config.js"></script>
+  <script src="attributes.js"></script>
+</head>
+
+<body>
+  <h1>チャンピオン初期化ページ</h1>
+  <p>キャラID=1を全属性の「勝ち抜きチャンピオン」と「最大達成値チャンピオン」に設定します。</p>
+
+  <button id="initBtn">初期化する</button>
+  <p id="status"></p>
+
+  <script>
+    const db = firebase.firestore();
+
+    document.getElementById("initBtn").onclick = async () => {
+      const status = document.getElementById("status");
+      status.textContent = "初期化中...";
+
+      try {
+        const championId = 1; // 強制的にキャラID=1
+        const batch = db.batch();
+
+        Object.keys(MAGIC_ATTRIBUTES).forEach(attrId => {
+          // 勝ち抜きチャンピオン
+          const champRef = db.collection("champions").doc(attrId);
+          batch.set(champRef, {
+            championId: championId,
+            winStreak: 0,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+
+          // 最大達成値チャンピオン
+          const maxRef = db.collection("maxAchieveChampions").doc(attrId);
+          batch.set(maxRef, {
+            championId: championId,
+            maxAchieve: 0,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        });
+
+        await batch.commit();
+
+        status.textContent = "初期化完了：キャラID=1を全属性のチャンピオンに設定しました。";
+      } catch (e) {
+        status.textContent = "エラー: " + e.message;
+      }
+    };
+  </script>
+</body>
+</html>
