@@ -27,13 +27,8 @@
     </div>
   </div>
 
-  <h3>種目選択</h3>
-  <select id="eventSelect">
-    <option value="1">種目1</option>
-    <option value="2">種目2</option>
-    <option value="3">種目3</option>
-    <option value="4">種目4</option>
-  </select>
+  <h3>属性選択</h3>
+  <select id="eventSelect"></select>
 
   <br><br>
 
@@ -51,6 +46,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <script src="firebase-config.js"></script>
+  <script src="attributes.js"></script>
 
   <script>
     firebase.initializeApp(firebaseConfig);
@@ -110,7 +106,7 @@
         <h4>種目</h4>
         <ul>
           ${Object.keys(myChar.events).map(i =>
-            `<li>種目${i}：ダイス ${myChar.events[i].dice} ／ クリティカル ${myChar.events[i].critical}</li>`
+            `<li>属性：${MAGIC_ATTRIBUTES[i]} ／ レベル ${myChar.events[i].dice} ／ 発動抵抗 ${myChar.events[i].critical}</li>`
           ).join("")}
         </ul>
       `;
@@ -122,11 +118,24 @@
         <h4>種目</h4>
         <ul>
           ${Object.keys(enemyChar.events).map(i =>
-            `<li>種目${i}：ダイス ${enemyChar.events[i].dice} ／ クリティカル ${enemyChar.events[i].critical}</li>`
+            `<li>属性：${MAGIC_ATTRIBUTES[i]} ／ レベル ${enemyChar.events[i].dice} ／ 発動抵抗 ${enemyChar.events[i].critical}</li>`
           ).join("")}
         </ul>
       `;
     }
+
+    // -------------------------
+    // 属性リスト
+    // -------------------------
+const select = document.getElementById("eventSelect");
+select.innerHTML = "";
+
+Object.keys(MAGIC_ATTRIBUTES).forEach(key => {
+  const opt = document.createElement("option");
+  opt.value = key;
+  opt.textContent = MAGIC_ATTRIBUTES[key];
+  select.appendChild(opt);
+});
 
     // -------------------------
     // ダイスロール処理
@@ -235,8 +244,8 @@
       enemyAchieve = 10 * (enX - 1) + enMax;
 
       const log = document.getElementById("battleLog");
-      log.innerHTML += `<p>自分 達成値：${myAchieve}</p>`;
-      log.innerHTML += `<p>相手 達成値：${enemyAchieve}</p>`;
+      log.innerHTML += `<p>自分 魔法威力：${myAchieve}</p>`;
+      log.innerHTML += `<p>相手 魔法威力：${enemyAchieve}</p>`;
 
       winnerAchieve();
     }

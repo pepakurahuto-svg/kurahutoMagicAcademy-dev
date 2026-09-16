@@ -20,14 +20,14 @@
   <p>経験値：360</p>
   <p>残り経験値：<span id="expRemain">360</span></p>
 
-  <h2>基本ダイス</h2>
+  <h2>基礎魔力量</h2>
   <p>
-    基本ダイス数：<span id="baseDice">4</span>
+    基礎魔力量：<span id="baseDice">4</span>
     <button id="baseDicePlus">+1</button>
     <button id="baseDiceMinus">-1</button>
   </p>
 
-  <h2>種目</h2>
+  <h2>属性</h2>
   <div id="eventsArea"></div>
 
   <button id="createBtn">キャラ作成</button>
@@ -53,6 +53,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <script src="firebase-config.js"></script>
+  <script src="attributes.js"></script>
   <script src="version.js"></script>
 
   <script>
@@ -82,12 +83,12 @@
       const div = document.createElement("div");
       div.className = "event-block";
       div.innerHTML = `
-        <h3>種目 ${i}</h3>
-        ダイス：<span id="dice${i}">0</span>
+        <h3>属性 ${MAGIC_ATTRIBUTES[i]}</h3>
+        レベル：<span id="dice${i}">0</span>
         <button id="dicePlus${i}">+1</button>
         <button id="diceMinus${i}">-1</button>
         <br>
-        クリティカル：<span id="critical${i}">10</span>
+        発動抵抗：<span id="critical${i}">10</span>
         <button id="criticalPlus${i}">+1</button>
         <button id="criticalMinus${i}">-1</button>
       `;
