@@ -50,8 +50,8 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
-    const playerDoc = null;
-    const playerRef = null;
+    let playerDoc = null;
+    let playerRef = null;
 
     // Googleログイン
     document.getElementById("googleLoginBtn").onclick = async () => {
