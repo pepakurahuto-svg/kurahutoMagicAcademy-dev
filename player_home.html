@@ -38,6 +38,9 @@
     <p id="nextRecoveryText"></p>
   </div>
 
+  <!-- チャンピオン表示 -->
+  <div id="championsArea"></div>
+
   <h2>あなたのキャラクター一覧</h2>
   <div id="charactersArea"></div>
 
@@ -216,6 +219,67 @@
       sessionStorage.setItem("selectedCharId", selected.value);
       location.href = "battle.html";
     };
+
+// -------------------------
+// チャンピオン表示
+// -------------------------
+async function loadChampions() {
+  const area = document.getElementById("championsArea");
+  area.innerHTML = "<h2>チャンピオン一覧</h2>";
+
+  for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
+    const attrName = MAGIC_ATTRIBUTES[attrId];
+
+    // 勝ち抜きチャンピオン
+    const champSnap = await db.collection("champions").doc(attrId).get();
+    let champHtml = "";
+    if (champSnap.exists) {
+      const data = champSnap.data();
+      champHtml = `
+        <p>
+          <strong>勝ち抜きチャンピオン：</strong><br>
+          キャラID：${data.championId}<br>
+          連勝数：${data.winStreak}
+        </p>
+      `;
+    } else {
+      champHtml = `<p>勝ち抜きチャンピオン：未設定</p>`;
+    }
+
+    // 最大達成値チャンピオン
+    const maxSnap = await db.collection("maxAchieveChampions").doc(attrId).get();
+    let maxHtml = "";
+    if (maxSnap.exists) {
+      const data = maxSnap.data();
+      maxHtml = `
+        <p>
+          <strong>最大達成値チャンピオン：</strong><br>
+          キャラID：${data.championId}<br>
+          最大達成値：${data.maxAchieve}
+        </p>
+      `;
+    } else {
+      maxHtml = `<p>最大達成値チャンピオン：未設定</p>`;
+    }
+
+    // まとめて表示
+    const div = document.createElement("div");
+    div.style.border = "1px solid #ccc";
+    div.style.margin = "10px";
+    div.style.padding = "10px";
+    div.innerHTML = `
+      <h3>属性：${attrName}</h3>
+      ${champHtml}
+      ${maxHtml}
+    `;
+    area.appendChild(div);
+  }
+}
+
+// ページ読み込み時に実行
+window.onload = () => {
+  loadChampions();
+};
 
     // ログアウト
     function logout() {
