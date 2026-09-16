@@ -226,7 +226,7 @@
 
       pageCharacters.forEach(ch => {
         const div = document.createElement("div");
-        const createdAtLocal = ch.createdAt.toDate().toLocaleString();
+        const createdAtLocal = new Date(ch.createdAt).toLocaleString();
         div.className = "myCharCard";
 
         div.innerHTML = `
