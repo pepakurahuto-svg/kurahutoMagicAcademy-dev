@@ -44,6 +44,37 @@
       border-bottom: 1px solid #ccc;
       padding-bottom: 2px;
     }
+
+    .myCharCard {
+      flex: 0 0 auto;
+      width: 260px;
+      background: #f2f2f2; /* 薄いグレー */
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      padding: 12px;
+      margin: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .myCharCard h3 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .myCharCard h4 {
+      margin-bottom: 4px;
+      color: #555;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 2px;
+    }
+
+    #charactersArea {
+      display: flex;
+      overflow-x: auto;
+      gap: 16px;
+      padding: 10px;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
@@ -184,7 +215,7 @@
     }
 
     // -------------------------
-    // ページ描画
+    // ページ描画（カードUI版）
     // -------------------------
     function renderPage() {
       const start = (currentPage - 1) * pageSize;
@@ -196,15 +227,14 @@
 
       pageCharacters.forEach(ch => {
         const div = document.createElement("div");
-        div.style.border = "1px solid #ccc";
-        div.style.margin = "10px";
-        div.style.padding = "10px";
+        div.className = "myCharCard";
 
         div.innerHTML = `
           <input type="checkbox" name="charSelect" value="${ch.characterId}">
-          <h3>キャラID：${ch.characterId}</h3>
-          <p>名前：${ch.name}</p>
+          <h3>${ch.name}</h3>
+
           <p>基礎魔力量：${ch.baseDice}</p>
+
           <h4>属性</h4>
           <ul>
             ${Object.keys(ch.events).map(i => `
@@ -213,9 +243,9 @@
               </li>
             `).join("")}
           </ul>
+
           <p>作成日時：${ch.createdAt}</p>
           <p>作成Ver：${ch.createdVersion}</p>
-          <p>プレイヤーID：${ch.playerId}</p>
         `;
         area.appendChild(div);
       });
