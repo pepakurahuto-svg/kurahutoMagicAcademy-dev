@@ -20,6 +20,7 @@
   <p id="status"></p>
 
   <script>
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
     document.getElementById("initBtn").onclick = async () => {
