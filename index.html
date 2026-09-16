@@ -50,6 +50,8 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+    const playerDoc = null;
+    const playerRef = null;
 
     // Googleログイン
     document.getElementById("googleLoginBtn").onclick = async () => {
@@ -58,8 +60,9 @@
         const result = await auth.signInWithPopup(provider);
         const uid = result.user.uid;
 
-        const playerDoc = await db.collection("players").doc(uid).get();
+        playerDoc = await db.collection("players").doc(uid).get();
         if (playerDoc.exists) {
+          await updatePlayerData();
           location.href = "player_home.html";
         } else {
           location.href = "player_create.html";
@@ -78,15 +81,16 @@
         const result = await auth.signInWithEmailAndPassword(email, password);
         const uid = result.user.uid;
 
-        const playerDoc = await db.collection("players").doc(uid).get();
+        playerDoc = await db.collection("players").doc(uid).get();
         if (playerDoc.exists) {
+          await updatePlayerData();
           location.href = "player_home.html";
         } else {
           location.href = "player_create.html";
         }
       }catch(e) {
-  console.log("1543"); // デバッグ用
-  console.log(e); // デバッグ用
+  //onsole.log("1543"); // デバッグ用
+  //console.log(e); // デバッグ用
 
   let msg = "";
 
@@ -119,6 +123,28 @@
     status.innerText = "ログイン失敗: " + msg;
   }
 }
+    };
+
+    // -------------------------
+    // プレイヤーデータ構造追加チェック
+    // -------------------------
+    async function updatePlayerData() {
+  const data = playerDoc.data();
+
+  // 🔹 スタミナフィールドが存在しない場合は初期化
+  if (
+    data.create_stamina === undefined ||
+    data.battle_stamina === undefined ||
+    data.last_create_recovery === undefined ||
+    data.last_battle_recovery === undefined
+  ) {
+    await playerRef.set({
+      create_stamina: 10,
+      battle_stamina: 10,
+      last_create_recovery: firebase.firestore.FieldValue.serverTimestamp(),
+      last_battle_recovery: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+  }
     };
 
     // 新規アカウント作成

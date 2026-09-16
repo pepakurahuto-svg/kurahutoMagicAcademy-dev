@@ -3,6 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <title>クラフト魔法学院 - ホーム</title>
+  <style>
+    #staminaArea {
+      border: 1px solid #888;
+      padding: 10px;
+      margin-bottom: 10px;
+      width: 300px;
+    }
+    .staminaBar {
+      height: 20px;
+      background-color: #4caf50;
+      transition: width 0.5s;
+    }
+  </style>
 </head>
 <body>
 
@@ -15,17 +28,26 @@
   <h1>クラフト魔法学院</h1>
   <p>ようこそ、プレイヤーさん！</p>
 
-<h2>あなたのキャラクター一覧</h2>
+  <!-- 🔹 スタミナ表示 -->
+  <div id="staminaArea">
+    <h3>スタミナ</h3>
+    <div>キャラ作成：<span id="createStaminaText"></span></div>
+    <div class="staminaBar" id="createStaminaBar"></div>
+    <div>バトル：<span id="battleStaminaText"></span></div>
+    <div class="staminaBar" id="battleStaminaBar"></div>
+    <p id="nextRecoveryText"></p>
+  </div>
 
-<div id="charactersArea"></div>
+  <h2>あなたのキャラクター一覧</h2>
+  <div id="charactersArea"></div>
 
-<div id="pagingArea">
-  <button id="prevPage">前のページ</button>
-  <span id="pageInfo"></span>
-  <button id="nextPage">次のページ</button>
-</div>
+  <div id="pagingArea">
+    <button id="prevPage">前のページ</button>
+    <span id="pageInfo"></span>
+    <button id="nextPage">次のページ</button>
+  </div>
 
-<p id="status"></p>
+  <p id="status"></p>
   <button onclick="location.href='character_create.html'">キャラ作成</button>
   <button id="battleBtn">バトル開始</button>
   <button onclick="logout()">ログアウト</button>
@@ -34,134 +56,170 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  <!-- Firebase config -->
   <script src="firebase-config.js"></script>
+
   <script>
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-let characters = [];     // 全キャラ
-let currentPage = 1;     // 現在のページ
-const pageSize = 5;      // 1ページ5体
+    let characters = [];
+    let currentPage = 1;
+    const pageSize = 5;
 
+    let createStamina = 0;
+    let battleStamina = 0;
+    let lastCreateRecovery = 0;
+    let lastBattleRecovery = 0;
+    const maxStamina = 10;
+
+    // -------------------------
     // ログイン情報表示
-    firebase.auth().onAuthStateChanged(async user => {
+    // -------------------------
+    auth.onAuthStateChanged(async user => {
       if (!user) {
         location.href = "index.html";
         return;
       }
 
-      // メールアドレス表示
       document.getElementById("userEmail").innerText = user.email;
-
-      // プレイヤー名取得
       const uid = user.uid;
       const playerDoc = await db.collection("players").doc(uid).get();
 
-      if (playerDoc.exists) {
-        const name = playerDoc.data().name;
-        document.getElementById("playerName").innerText = name + " さん";
-      } else {
-        // プレイヤー名が無い場合は作成画面へ
+      if (!playerDoc.exists) {
         location.href = "player_create.html";
+        return;
       }
 
-        // 自分のキャラを取得
-  const snap = await db.collection("characters")
-    .where("playerId", "==", uid)
-    .orderBy("characterId", "asc")
-    .get();
+      const data = playerDoc.data();
+      document.getElementById("playerName").innerText = data.name + " さん";
 
-  characters = snap.docs.map(doc => doc.data());
+      // スタミナ情報取得
+      createStamina = data.create_stamina;
+      battleStamina = data.battle_stamina;
+      lastCreateRecovery = data.last_create_recovery.toMillis();
+      lastBattleRecovery = data.last_battle_recovery.toMillis();
 
-  renderPage();
+      updateStaminaDisplay();
+
+      // キャラ一覧取得
+      const snap = await db.collection("characters")
+        .where("playerId", "==", uid)
+        .orderBy("characterId", "asc")
+        .get();
+
+      characters = snap.docs.map(doc => doc.data());
+      renderPage();
+
+      // 🔹 スタミナ表示を定期更新（リロードなし）
+      setInterval(updateStaminaDisplay, 1000);
     });
 
-// -------------------------
-// ページ描画
-// -------------------------
-function renderPage() {
-  const start = (currentPage - 1) * pageSize;
-  const end = start + pageSize;
-  const pageCharacters = characters.slice(start, end);
+    // -------------------------
+    // スタミナ表示更新
+    // -------------------------
+    function updateStaminaDisplay() {
+      const now = Date.now();
 
-  const area = document.getElementById("charactersArea");
-  area.innerHTML = "";
+      // 回復計算
+      const diffCreate = Math.floor((now - lastCreateRecovery) / (1000 * 60 * 60));
+      const diffBattle = Math.floor((now - lastBattleRecovery) / (1000 * 60 * 60));
 
-  pageCharacters.forEach(ch => {
-    const div = document.createElement("div");
-    div.style.border = "1px solid #ccc";
-    div.style.margin = "10px";
-    div.style.padding = "10px";
+      if (diffCreate > 0 && createStamina < maxStamina) {
+        createStamina = Math.min(maxStamina, createStamina + diffCreate);
+        lastCreateRecovery = now;
+      }
+      if (diffBattle > 0 && battleStamina < maxStamina) {
+        battleStamina = Math.min(maxStamina, battleStamina + diffBattle);
+        lastBattleRecovery = now;
+      }
 
-    div.innerHTML = `
-      <input type="checkbox" name="charSelect" value="${ch.characterId}">
-      <h3>キャラID：${ch.characterId}</h3>
-      <p>名前：${ch.name}</p>
-      <p>基本ダイス：${ch.baseDice}</p>
+      // 次回回復までの残り時間
+      const nextRecovery = Math.min(
+        lastCreateRecovery + 1000 * 60 * 60,
+        lastBattleRecovery + 1000 * 60 * 60
+      );
+      const remainingMinutes = Math.max(0, Math.floor((nextRecovery - now) / (1000 * 60)));
 
-      <h4>種目</h4>
-      <ul>
-        ${Object.keys(ch.events).map(i => `
-          <li>
-            種目${i}：ダイス ${ch.events[i].dice} ／ クリティカル ${ch.events[i].critical}
-          </li>
-        `).join("")}
-      </ul>
+      // 表示更新
+      document.getElementById("createStaminaText").innerText = `${createStamina}/${maxStamina}`;
+      document.getElementById("battleStaminaText").innerText = `${battleStamina}/${maxStamina}`;
+      document.getElementById("createStaminaBar").style.width = `${(createStamina / maxStamina) * 100}%`;
+      document.getElementById("battleStaminaBar").style.width = `${(battleStamina / maxStamina) * 100}%`;
+      document.getElementById("nextRecoveryText").innerText = `次の回復まであと ${remainingMinutes} 分`;
+    }
 
-      <p>作成日時：${ch.createdAt}</p>
-      <p>作成Ver：${ch.createdVersion}</p>
-      <p>プレイヤーID：${ch.playerId}</p>
-    `;
+    // -------------------------
+    // ページ描画
+    // -------------------------
+    function renderPage() {
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+      const pageCharacters = characters.slice(start, end);
 
-    area.appendChild(div);
-  });
+      const area = document.getElementById("charactersArea");
+      area.innerHTML = "";
 
-  // ページ情報更新
-  const totalPages = Math.ceil(characters.length / pageSize);
-  document.getElementById("pageInfo").innerText =
-    `${currentPage} / ${totalPages}`;
-}
+      pageCharacters.forEach(ch => {
+        const div = document.createElement("div");
+        div.style.border = "1px solid #ccc";
+        div.style.margin = "10px";
+        div.style.padding = "10px";
 
-// -------------------------
-// ページングボタン
-// -------------------------
-document.getElementById("prevPage").onclick = () => {
-  if (currentPage > 1) {
-    currentPage--;
-    renderPage();
-  }
-};
+        div.innerHTML = `
+          <input type="checkbox" name="charSelect" value="${ch.characterId}">
+          <h3>キャラID：${ch.characterId}</h3>
+          <p>名前：${ch.name}</p>
+          <p>基本ダイス：${ch.baseDice}</p>
+          <h4>種目</h4>
+          <ul>
+            ${Object.keys(ch.events).map(i => `
+              <li>
+                種目${i}：ダイス ${ch.events[i].dice} ／ クリティカル ${ch.events[i].critical}
+              </li>
+            `).join("")}
+          </ul>
+          <p>作成日時：${ch.createdAt}</p>
+          <p>作成Ver：${ch.createdVersion}</p>
+          <p>プレイヤーID：${ch.playerId}</p>
+        `;
+        area.appendChild(div);
+      });
 
-document.getElementById("nextPage").onclick = () => {
-  const totalPages = Math.ceil(characters.length / pageSize);
-  if (currentPage < totalPages) {
-    currentPage++;
-    renderPage();
-  }
-};
+      const totalPages = Math.ceil(characters.length / pageSize);
+      document.getElementById("pageInfo").innerText = `${currentPage} / ${totalPages}`;
+    }
 
-// -------------------------
-// バトル開始ボタン
-// -------------------------
-document.getElementById("battleBtn").onclick = () => {
-  const selected = document.querySelector('input[name="charSelect"]:checked');
-  if (!selected) {
-    alert("キャラを選択してください");
-    return;
-  }
-  sessionStorage.setItem("selectedCharId", selected.value);
-  location.href = "battle.html";
-};
+    // ページング
+    document.getElementById("prevPage").onclick = () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderPage();
+      }
+    };
+    document.getElementById("nextPage").onclick = () => {
+      const totalPages = Math.ceil(characters.length / pageSize);
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderPage();
+      }
+    };
+
+    // バトル開始
+    document.getElementById("battleBtn").onclick = () => {
+      const selected = document.querySelector('input[name="charSelect"]:checked');
+      if (!selected) {
+        alert("キャラを選択してください");
+        return;
+      }
+      sessionStorage.setItem("selectedCharId", selected.value);
+      location.href = "battle.html";
+    };
 
     // ログアウト
     function logout() {
-      auth.signOut().then(() => {
-        location.href = "index.html";
-      });
+      auth.signOut().then(() => location.href = "index.html");
     }
   </script>
-
 </body>
 </html>

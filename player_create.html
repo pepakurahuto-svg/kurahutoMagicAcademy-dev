@@ -48,22 +48,30 @@
       }
 
       try {
-        const user = auth.currentUser;
-        if (!user) {
-          document.getElementById("status").innerText = "ログイン情報がありません。index.html へ戻ってください。";
-          return;
-        }
+const user = auth.currentUser;
+if (!user) {
+  document.getElementById("status").innerText = "ログイン情報がありません。index.html へ戻ってください。";
+  return;
+}
 
-        const uid = user.uid;
+const uid = user.uid;
 
-        // Firestore にプレイヤー情報を保存
-        await db.collection("players").doc(uid).set({
-          name: name,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+// Firestore にプレイヤー情報を保存（スタミナ初期化付き）
+await db.collection("players").doc(uid).set({
+  name: name,
+  createdAt: firebase.firestore.FieldValue.serverTimestamp(),
 
-        // 保存後 player_home.html へ
-        location.href = "player_home.html";
+  // 🔹 スタミナ初期値
+  create_stamina: 10,
+  battle_stamina: 10,
+
+  // 🔹 最終回復時刻（現在時刻で初期化）
+  last_create_recovery: firebase.firestore.FieldValue.serverTimestamp(),
+  last_battle_recovery: firebase.firestore.FieldValue.serverTimestamp()
+}, { merge: true }); // ← 既存データがあっても上書きせず追加
+
+// 保存後 player_home.html へ
+location.href = "player_home.html";
 
       } catch (e) {
         document.getElementById("status").innerText = "保存失敗: " + e.message;
