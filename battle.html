@@ -340,7 +340,7 @@
         winner = `${enemyChar.name}（相手）`;
         color = "blue";
       } else {
-        winner = "引き分け";
+        winner = "引き分け（相手）";
         color = "black";
       }
 
@@ -367,17 +367,21 @@
 
       const log = document.getElementById("battleLog");
 
-      // --- 自分の最大威力更新 ---
-      const myCurrentMax = myChar.maxAchieve || 0;
+      // --- 自分の最大威力更新（属性ごと） ---
+      const myCurrentMax = myChar.events[attrId]?.maxAchieve || 0;
       if (myAchieve > myCurrentMax) {
-        await myRef.update({ maxAchieve: myAchieve });
+        await myRef.update({
+          [`events.${attrId}.maxAchieve`]: myAchieve
+        });
         log.innerHTML += `<p style="color:red">自分の最大威力が更新されました！（${myCurrentMax} → ${myAchieve}）</p>`;
       }
 
-      // --- 相手の最大威力更新（整合性保持） ---
-      const enemyCurrentMax = enemyChar.maxAchieve || 0;
+      // --- 相手の最大威力更新（属性ごと） ---
+      const enemyCurrentMax = enemyChar.events[attrId]?.maxAchieve || 0;
       if (enemyAchieve > enemyCurrentMax) {
-        await enemyRef.update({ maxAchieve: enemyAchieve });
+        await enemyRef.update({
+          [`events.${attrId}.maxAchieve`]: enemyAchieve
+        });
         log.innerHTML += `<p style="color:blue">相手の最大威力が更新されました！（${enemyCurrentMax} → ${enemyAchieve}）</p>`;
       }
 
@@ -389,7 +393,7 @@
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         log.innerHTML += `<p style="color:red">あなたが新しい ${MAGIC_ATTRIBUTE_CHAMPION[attrId]} になりました！</p>`;
-      } else if (myAchieve < enemyAchieve) {
+      } else {
         const currentStreak = champData.winStreak || 0;
         await champRef.update({
           winStreak: currentStreak + 1,
@@ -410,6 +414,11 @@
           maxAchieve: winnerAchieve,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+        if (myAchieve > enemyAchieve) {
+          log.innerHTML += `<p style="color:red">あなたが新しい ${MAGIC_ATTRIBUTE_MAXDAMAGE[attrId]} になりました！</p>`;
+        }else{
+          log.innerHTML += `<p style="color:blue">相手が新しい ${MAGIC_ATTRIBUTE_MAXDAMAGE[attrId]} になりました！</p>`;
+        }
       }
     }
 
