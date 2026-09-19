@@ -9,6 +9,28 @@
     .flex { display:flex; justify-content:space-between; }
     .red { color:red; font-weight:bold; }
     #battleLog p { margin:4px 0; }
+
+    .battleCharCard {
+      width: 300px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      padding: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      background: var(--attr-color); /* ★属性カラーを JS から渡す */
+    }
+
+    .battleCharCard h3 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .battleCharCard h4 {
+      margin-bottom: 4px;
+      color: #555;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 2px;
+    }
+
   </style>
 </head>
 
@@ -146,6 +168,55 @@
         </ul>
       `;
     }
+    function renderCharInfo() {
+      const myArea = document.getElementById("myCharInfo");
+      const enArea = document.getElementById("enemyCharInfo");
+
+      const eventNo = String(enemyAttrId); // ★バトル属性
+      const myEvent = myChar.events[eventNo];
+      const enEvent = enemyChar.events[eventNo];
+
+      // 属性カラークラス
+      const attrClassMap = {
+        1: "attr-fire",
+        2: "attr-water",
+        3: "attr-wind",
+        4: "attr-earth"
+      };
+      const attrClass = attrClassMap[eventNo];
+
+      // 自分
+      myArea.innerHTML = `
+        <div class="battleCharCard">
+          <h3>${myChar.name}</h3>
+          <p>基礎魔力量：${myChar.baseDice}</p>
+
+          <h4>バトル属性</h4>
+          <div class="attrBox ${attrClass}">
+            <p><strong>${MAGIC_ATTRIBUTES[eventNo]}</strong></p>
+            <p>レベル：${myEvent.dice}</p>
+            <p>発動抵抗：${myEvent.critical}</p>
+            <p>最大威力：${myChar.maxAchieve ?? 0}</p>
+          </div>
+        </div>
+      `;
+
+      // 相手
+      enArea.innerHTML = `
+        <div class="battleCharCard">
+          <h3>${enemyChar.name}</h3>
+          <p>基礎魔力量：${enemyChar.baseDice}</p>
+
+          <h4>バトル属性</h4>
+          <div class="attrBox ${attrClass}">
+            <p><strong>${MAGIC_ATTRIBUTES[eventNo]}</strong></p>
+            <p>レベル：${enEvent.dice}</p>
+            <p>発動抵抗：${enEvent.critical}</p>
+            <p>最大威力：${enemyChar.maxAchieve ?? 0}</p>
+          </div>
+        </div>
+      `;
+    }
 
     // -------------------------
     // ダイスロール処理
@@ -242,6 +313,7 @@
       if (myCriticalTargets.length === 0 && enemyCriticalTargets.length === 0) {
         document.getElementById("rerollBtn").disabled = true;
       }else{
+        document.getElementById("rerollBtn").disabled = false;
         return;
       }
       const myX = myRolls.length;
