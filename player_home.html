@@ -129,10 +129,18 @@
   </div>
 
   <p id="status"></p>
-  <button onclick="location.href='character_create.html'">キャラ作成</button>
-  <button id="battleBtn">バトル開始</button>
-  <button id="character_delete">キャラ削除</button>
-  <button onclick="logout()">ログアウト</button>
+  <button onclick="location.href='character_create.html'">キャラ作成</button><br>
+  <!-- ★ バトル説明文 -->
+  <p id="battleDescription">
+    バトルを開始するには、まず自分のキャラを選択し、<br>
+    対戦したい相手（属性チャンピオン）を選んでください。
+  </p>
+  <!-- ★ 対戦相手選択コンボボックス -->
+  <label for="enemySelect">対戦相手：</label>
+  <select id="enemySelect"></select>
+  <button id="battleBtn">バトル開始</button><br>
+  <button id="character_delete">キャラ削除</button><br>
+  <button onclick="logout()">ログアウト</button><br>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -193,6 +201,7 @@
 
       characters = snap.docs.map(doc => doc.data());
       renderPage();
+      loadEnemySelect(); // コンボボックスに選択肢を入れる
 
       // 🔹 スタミナ表示を定期更新（リロードなし）
       setInterval(updateStaminaDisplay, 1000);
@@ -310,14 +319,21 @@
       }
     };
 
+    // -------------------------
     // バトル開始
+    // -------------------------
     document.getElementById("battleBtn").onclick = () => {
       const selected = document.querySelector('input[name="charSelect"]:checked');
       if (!selected) {
-        alert("キャラを選択してください");
+        alert("自分のキャラを選択してください");
         return;
       }
+
+      const enemyAttrId = document.getElementById("enemySelect").value;
+
       sessionStorage.setItem("selectedCharId", selected.value);
+      sessionStorage.setItem("enemyAttrId", enemyAttrId); // ★追加：対戦相手の属性ID
+
       location.href = "battle.html";
     };
 
@@ -441,7 +457,20 @@
         area.appendChild(div);
       }
     }
+    // -------------------------
+    // 属性チャンピオン選択肢をバトル相手コンボボックスに追加
+    // -------------------------
+    function loadEnemySelect() {
+      const select = document.getElementById("enemySelect");
+      select.innerHTML = ""; // 初期化
 
+      for (const attrId of Object.keys(MAGIC_ATTRIBUTE_CHAMPION)) {
+        const option = document.createElement("option");
+        option.value = attrId;
+        option.textContent = MAGIC_ATTRIBUTE_CHAMPION[attrId];
+        select.appendChild(option);
+      }
+    }
     // -------------------------
     // キャラクター削除
     // -------------------------
