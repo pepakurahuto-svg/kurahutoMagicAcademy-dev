@@ -15,6 +15,17 @@
       background-color: #4caf50;
       transition: width 0.5s;
     }
+    .full {
+      color: #4CAF50; /* 緑 */
+      font-weight: bold;
+    }
+    #createStaminaBar {
+      background-color: #2196F3; /* 青 */
+    }
+
+    #battleStaminaBar {
+      background-color: #f44336; /* 赤 */
+    }
     #championsArea {
       display: flex;
       overflow-x: auto;   /* 横スクロール維持 */
@@ -90,11 +101,18 @@
   <!-- 🔹 スタミナ表示 -->
   <div id="staminaArea">
     <h3>スタミナ</h3>
-    <div>キャラ作成：<span id="createStaminaText"></span></div>
+
+    <!-- キャラ作成スタミナ -->
+    <h4>キャラ作成スタミナ</h4>
+    <div><span id="createStaminaText"></span></div>
     <div class="staminaBar" id="createStaminaBar"></div>
-    <div>バトル：<span id="battleStaminaText"></span></div>
+    <p id="nextCreateRecoveryText"></p>
+
+    <!-- バトルスタミナ -->
+    <h4>バトルスタミナ</h4>
+    <div><span id="battleStaminaText"></span></div>
     <div class="staminaBar" id="battleStaminaBar"></div>
-    <p id="nextRecoveryText"></p>
+    <p id="nextBattleRecoveryText"></p>
   </div>
 
   <!-- チャンピオン表示 -->
@@ -186,32 +204,57 @@
     function updateStaminaDisplay() {
       const now = Date.now();
 
-      // 回復計算
-      const diffCreate = Math.floor((now - lastCreateRecovery) / (1000 * 60 * 60));
-      const diffBattle = Math.floor((now - lastBattleRecovery) / (1000 * 60 * 60));
-
-      if (diffCreate > 0 && createStamina < maxStamina) {
-        createStamina = Math.min(maxStamina, createStamina + diffCreate);
+      // --- キャラ作成スタミナ回復 ---
+      const diffCreateHours = Math.floor((now - lastCreateRecovery) / (1000 * 60 * 60));
+      if (diffCreateHours > 0 && createStamina < maxStamina) {
+        createStamina = Math.min(maxStamina, createStamina + diffCreateHours);
         lastCreateRecovery = now;
       }
-      if (diffBattle > 0 && battleStamina < maxStamina) {
-        battleStamina = Math.min(maxStamina, battleStamina + diffBattle);
+
+      // --- バトルスタミナ回復 ---
+      const diffBattleHours = Math.floor((now - lastBattleRecovery) / (1000 * 60 * 60));
+      if (diffBattleHours > 0 && battleStamina < maxStamina) {
+        battleStamina = Math.min(maxStamina, battleStamina + diffBattleHours);
         lastBattleRecovery = now;
       }
 
-      // 次回回復までの残り時間
-      const nextRecovery = Math.min(
-        lastCreateRecovery + 1000 * 60 * 60,
-        lastBattleRecovery + 1000 * 60 * 60
-      );
-      const remainingMinutes = Math.max(0, Math.floor((nextRecovery - now) / (1000 * 60)));
+      // --- 次回回復までの残り時間（個別） ---
+      const nextCreateRecovery = lastCreateRecovery + 1000 * 60 * 60;
+      const nextBattleRecovery = lastBattleRecovery + 1000 * 60 * 60;
 
-      // 表示更新
+      const remainingCreate = createStamina >= maxStamina
+        ? "満タン"
+        : `${Math.max(0, Math.floor((nextCreateRecovery - now) / (1000 * 60)))} 分`;
+
+      const remainingBattle = battleStamina >= maxStamina
+        ? "満タン"
+        : `${Math.max(0, Math.floor((nextBattleRecovery - now) / (1000 * 60)))} 分`;
+
+      // --- 表示更新 ---
       document.getElementById("createStaminaText").innerText = `${createStamina}/${maxStamina}`;
       document.getElementById("battleStaminaText").innerText = `${battleStamina}/${maxStamina}`;
+
       document.getElementById("createStaminaBar").style.width = `${(createStamina / maxStamina) * 100}%`;
       document.getElementById("battleStaminaBar").style.width = `${(battleStamina / maxStamina) * 100}%`;
-      document.getElementById("nextRecoveryText").innerText = `次の回復まであと ${remainingMinutes} 分`;
+
+      document.getElementById("nextCreateRecoveryText").innerText = `作成スタミナ回復まで：${remainingCreate}`;
+      document.getElementById("nextBattleRecoveryText").innerText = `バトルスタミナ回復まで：${remainingBattle}`;
+
+      // ★変更：満タン時だけテキスト色を変える
+      const createText = document.getElementById("nextCreateRecoveryText");
+      const battleText = document.getElementById("nextBattleRecoveryText");
+
+      if (createStamina >= maxStamina) {
+        createText.classList.add("full");   // ★追加
+      } else {
+        createText.classList.remove("full"); // ★追加
+      }
+
+      if (battleStamina >= maxStamina) {
+        battleText.classList.add("full");   // ★追加
+      } else {
+        battleText.classList.remove("full"); // ★追加
+      }
     }
 
     // -------------------------
