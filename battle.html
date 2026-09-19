@@ -332,16 +332,20 @@
     // -------------------------
     function winnerAchieve() {
       let winner = "";
+      let color = "";
       if (myAchieve > enemyAchieve) {
         winner = `${myChar.name}（自分）`;
+        color = "red";
       } else if (myAchieve < enemyAchieve) {
         winner = `${enemyChar.name}（相手）`;
+        color = "blue";
       } else {
         winner = "引き分け";
+        color = "black";
       }
 
       const log = document.getElementById("battleLog");
-      log.innerHTML += `<h3>勝者：${winner}</h3>`;
+      log.innerHTML += `<h3 style="color:${color}">勝者：${winner}</h3>`;
     }
 
     // -------------------------
@@ -351,6 +355,7 @@
       const attrId = String(enemyAttrId);
 
       const myRef = db.collection("characters").doc(String(myChar.characterId));
+      const enemyRef = db.collection("characters").doc(String(enemyChar.characterId));
       const champRef = db.collection("champions").doc(attrId);
       const maxChampRef = db.collection("maxAchieveChampions").doc(attrId);
 
@@ -360,12 +365,20 @@
       const champData = champSnap.exists ? champSnap.data() : { championId: 0, winStreak: 0 };
       const maxChampData = maxChampSnap.exists ? maxChampSnap.data() : { championId: 0, maxAchieve: 0 };
 
+      const log = document.getElementById("battleLog");
+
       // --- 自分の最大威力更新 ---
       const myCurrentMax = myChar.maxAchieve || 0;
       if (myAchieve > myCurrentMax) {
-        await myRef.update({
-          maxAchieve: myAchieve
-        });
+        await myRef.update({ maxAchieve: myAchieve });
+        log.innerHTML += `<p style="color:red">自分の最大威力が更新されました！（${myCurrentMax} → ${myAchieve}）</p>`;
+      }
+
+      // --- 相手の最大威力更新（整合性保持） ---
+      const enemyCurrentMax = enemyChar.maxAchieve || 0;
+      if (enemyAchieve > enemyCurrentMax) {
+        await enemyRef.update({ maxAchieve: enemyAchieve });
+        log.innerHTML += `<p style="color:blue">相手の最大威力が更新されました！（${enemyCurrentMax} → ${enemyAchieve}）</p>`;
       }
 
       // --- 勝敗処理（達成値で判定） ---
@@ -375,6 +388,7 @@
           winStreak: 1,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+        log.innerHTML += `<p style="color:red">あなたが新しい ${MAGIC_ATTRIBUTE_CHAMPION[attrId]} になりました！</p>`;
       } else if (myAchieve < enemyAchieve) {
         const currentStreak = champData.winStreak || 0;
         await champRef.update({
@@ -398,6 +412,7 @@
         });
       }
     }
+
   </script>
 </body>
 </html>
