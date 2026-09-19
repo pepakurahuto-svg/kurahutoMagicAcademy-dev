@@ -390,6 +390,11 @@
           const dice = champChar.events && champChar.events[attrId]
             ? champChar.events[attrId].dice
             : "不明";
+            
+          // ★ 属性ごとの maxAchieve を取得
+          const maxAchieve = champChar.events && champChar.events[attrId]
+            ? champChar.events[attrId].maxAchieve
+            : "不明";
 
           if (champChar) {
             const creatorName = await loadPlayerName(champChar.playerId);
@@ -403,8 +408,8 @@
                 基礎魔力量：${champChar.baseDice}<br>
                 レベル：${dice}<br>
                 発動抵抗：${critical}<br>
-                連勝数：${data.winStreak}
-                最大威力：${data.maxAchieve}
+                連勝数：${data.winStreak}<br>
+                最大威力：${maxAchieve}
               </p>
             `;
           } else {
