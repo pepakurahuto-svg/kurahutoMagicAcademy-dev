@@ -436,6 +436,34 @@
         }
       }
 
+console.log("=== 型チェック開始 ===");
+console.log("選択された charId:", charId, "typeof:", typeof charId);
+
+for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
+  const snap = await db.collection("champions").doc(attrId).get();
+  if (snap.exists) {
+    console.log(
+      `champions[${attrId}] championId:`,
+      snap.data().championId,
+      "typeof:",
+      typeof snap.data().championId
+    );
+  }
+}
+
+for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
+  const snap = await db.collection("maxAchieveChampions").doc(attrId).get();
+  if (snap.exists) {
+    console.log(
+      `maxAchieveChampions[${attrId}] championId:`,
+      snap.data().championId,
+      "typeof:",
+      typeof snap.data().championId
+    );
+  }
+}
+console.log("=== 型チェック終了 ===");
+
       if (isChampion) {
         alert("このキャラは覇者もくしは王のため削除できません");
         return;
