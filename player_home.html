@@ -154,6 +154,7 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    let currentUserId = null;
     let characters = [];
     let currentPage = 1;
     const pageSize = 4;
@@ -171,11 +172,12 @@
       if (!user) {
         location.href = "index.html";
         return;
+      }else{
+        currentUserId = user.uid;
       }
 
       document.getElementById("userEmail").innerText = user.email;
-      const uid = user.uid;
-      const playerDoc = await db.collection("players").doc(uid).get();
+      const playerDoc = await db.collection("players").doc(currentUserId).get();
 
       if (!playerDoc.exists) {
         location.href = "player_create.html";
@@ -195,7 +197,7 @@
 
       // キャラ一覧取得
       const snap = await db.collection("characters")
-        .where("playerId", "==", uid)
+        .where("playerId", "==", currentUserId)
         .orderBy("characterId", "asc")
         .get();
 
@@ -360,6 +362,13 @@
 
         return playerSnap.exists ? playerSnap.data().name : "不明なプレイヤー";
       }
+      // チャンピオンが自分のキャラならハイライト表示
+      function highlightCreator(name, playerId) {
+        if (playerId === currentUserId) {
+          return `<strong style="color:red; font-weight:bold;">${name}</strong>`;
+        }
+        return name;
+      }
 
       for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
         const attrName = MAGIC_ATTRIBUTES[attrId];
@@ -384,12 +393,13 @@
 
           if (champChar) {
             const creatorName = await loadPlayerName(champChar.playerId);
+            const creatorDisplay = highlightCreator(creatorName, champChar.playerId);
 
             champHtml = `
               <p>
                 <strong>${MAGIC_ATTRIBUTE_CHAMPION[attrId]}(勝ち抜き)</strong><br>
                 キャラ名：${champChar.name}<br>
-                作成者：${creatorName}<br>
+                作成者：${creatorDisplay}<br>
                 基礎魔力量：${champChar.baseDice}<br>
                 レベル：${dice}<br>
                 発動抵抗：${critical}<br>
@@ -423,12 +433,13 @@
 
           if (maxChar) {
             const creatorName = await loadPlayerName(maxChar.playerId);
+            const creatorDisplay = highlightCreator(creatorName, maxChar.playerId);
 
             maxHtml = `
               <p>
                 <strong>${MAGIC_ATTRIBUTE_MAXDAMAGE[attrId]}(最大威力)</strong><br>
                 キャラ名：${maxChar.name}<br>
-                作成者：${creatorName}<br>
+                作成者：${creatorDisplay}<br>
                 基礎魔力量：${maxChar.baseDice}<br>
                 レベル：${dice}<br>
                 発動抵抗：${critical}<br>
