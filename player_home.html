@@ -444,7 +444,7 @@
       const ok = confirm("キャラを削除してもよろしいですか？");
       if (!ok) return;
 
-      await db.collection("characters").doc(charId).delete();
+      await db.collection("characters").doc(String(charId)).delete();//Stringで渡さないとエラー
       alert("キャラを削除しました");
       location.reload();
     };
