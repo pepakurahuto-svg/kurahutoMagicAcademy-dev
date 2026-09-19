@@ -5,8 +5,13 @@
   <title>バトル</title>
   <style>
     body { font-family: sans-serif; }
-    .charBox { border:1px solid #ccc; padding:10px; width:45%; }
-      .flex {
+    .charBox {
+      display: inline-block;   /* 中身の幅に合わせる */
+      padding: 0;              /* 余白を消す */
+      margin: 0;               /* 余白を消す */
+      border: none;            /* 枠線も不要なら消す（任意） */
+    }
+    .flex {
       display: flex;
       gap: 16px;        /* カード間の余白だけ確保 */
       align-items: flex-start;
