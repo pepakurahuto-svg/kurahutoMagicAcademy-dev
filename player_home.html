@@ -113,6 +113,7 @@
   <p id="status"></p>
   <button onclick="location.href='character_create.html'">キャラ作成</button>
   <button id="battleBtn">バトル開始</button>
+  <button id="character_delete">キャラ削除</button>
   <button onclick="logout()">ログアウト</button>
 
   <!-- Firebase SDK -->
@@ -397,6 +398,57 @@
         area.appendChild(div);
       }
     }
+
+    // -------------------------
+    // キャラクター削除
+    // -------------------------
+    document.getElementById("character_delete").onclick = async () => {
+      // ★ 選択されているチェックボックスを全部取得
+      const selectedList = document.querySelectorAll('input[name="charSelect"]:checked');
+
+      if (selectedList.length === 0) {
+        alert("削除するキャラを選択してください");
+        return;
+      }
+
+      if (selectedList.length > 1) {
+        alert("キャラ削除は1体のみ可能です。1体だけ選択してください。");
+        return;
+      }
+
+      const charId = selectedList[0].value;
+
+      // ★ 勝ち抜きチャンピオン判定
+      let isChampion = false;
+
+      for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
+        const snap = await db.collection("champions").doc(attrId).get();
+        if (snap.exists && snap.data().championId === charId) {
+          isChampion = true;
+        }
+      }
+
+      // ★ 最大威力チャンピオン判定
+      for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
+        const snap = await db.collection("maxAchieveChampions").doc(attrId).get();
+        if (snap.exists && snap.data().championId === charId) {
+          isChampion = true;
+        }
+      }
+
+      if (isChampion) {
+        alert("このキャラは覇者もくしは王のため削除できません");
+        return;
+      }
+
+      // ★ 削除確認
+      const ok = confirm("キャラを削除してもよろしいですか？");
+      if (!ok) return;
+
+      await db.collection("characters").doc(charId).delete();
+      alert("キャラを削除しました");
+      location.reload();
+    };
 
     // ページ読み込み時に実行
     window.onload = () => {
