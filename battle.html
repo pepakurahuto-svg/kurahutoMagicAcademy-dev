@@ -22,19 +22,22 @@
     </div>
 
     <div class="charBox">
-      <h2>相手</h2>
+      <h2>相手（属性チャンピオン）</h2>
       <div id="enemyCharInfo"></div>
     </div>
   </div>
 
-  <h3>属性選択</h3>
-  <select id="eventSelect"></select>
+  <h3>バトル説明</h3>
+  <p>
+    プレイヤーホームで選択した自分のキャラと、<br>
+    対戦したい属性チャンピオンでバトルを行います。<br>
+    バトル属性は、プレイヤーホームで選択した属性で固定されます。
+  </p>
 
-  <br><br>
+  <br>
 
   <button id="rollBtn">ダイスロール</button>
   <button id="rerollBtn" disabled>再ロール</button>
-  <button id="damageBtn" disabled>ダメージ計算</button>
 
   <h3>バトルログ</h3>
   <div id="battleLog"></div>
@@ -55,17 +58,15 @@
 
     let myChar = null;
     let enemyChar = null;
+    let enemyAttrId = null;
 
-    let myRolls = [];        // 各回のロール結果（配列の配列）
+    let myRolls = [];
     let enemyRolls = [];
-    let myCriticalTargets = [];     // 次回再ロール対象
+    let myCriticalTargets = [];
     let enemyCriticalTargets = [];
 
     let myAchieve = null;
     let enemyAchieve = null;
-
-    let myDamage = null;
-    let enDamage = null;
 
     // -------------------------
     // キャラ情報読み込み
@@ -77,16 +78,40 @@
       }
 
       const myId = sessionStorage.getItem("selectedCharId");
-      if (!myId) {
-        alert("キャラが選択されていません");
+      enemyAttrId = sessionStorage.getItem("enemyAttrId");
+
+      if (!myId || !enemyAttrId) {
+        alert("キャラまたは対戦属性が選択されていません");
         location.href = "player_home.html";
         return;
       }
 
+      // 自分のキャラ
       const mySnap = await db.collection("characters").doc(myId).get();
+      if (!mySnap.exists) {
+        alert("自分のキャラ情報が取得できませんでした");
+        location.href = "player_home.html";
+        return;
+      }
       myChar = mySnap.data();
 
-      const enemySnap = await db.collection("characters").doc("1").get();
+      // 属性チャンピオン情報
+      const champSnap = await db.collection("champions").doc(String(enemyAttrId)).get();
+      if (!champSnap.exists) {
+        alert("この属性のチャンピオンが存在しません");
+        location.href = "player_home.html";
+        return;
+      }
+      const champData = champSnap.data();
+      const enemyId = String(champData.championId);
+
+      // チャンピオンのキャラ情報
+      const enemySnap = await db.collection("characters").doc(enemyId).get();
+      if (!enemySnap.exists) {
+        alert("チャンピオンのキャラ情報が取得できませんでした");
+        location.href = "player_home.html";
+        return;
+      }
       enemyChar = enemySnap.data();
 
       renderCharInfo();
@@ -100,42 +125,27 @@
       const enArea = document.getElementById("enemyCharInfo");
 
       myArea.innerHTML = `
-        <p>ID：${myChar.characterId}</p>
         <p>名前：${myChar.name}</p>
-        <p>基本ダイス：${myChar.baseDice}</p>
-        <h4>種目</h4>
+        <p>基礎魔力量：${myChar.baseDice}</p>
+        <h4>属性 ／ レベル ／ 発動抵抗</h4>
         <ul>
           ${Object.keys(myChar.events).map(i =>
-            `<li>属性：${MAGIC_ATTRIBUTES[i]} ／ レベル ${myChar.events[i].dice} ／ 発動抵抗 ${myChar.events[i].critical}</li>`
+            `<li>${MAGIC_ATTRIBUTES[i]} ／ ${myChar.events[i].dice} ／ ${myChar.events[i].critical}</li>`
           ).join("")}
         </ul>
       `;
 
       enArea.innerHTML = `
-        <p>ID：${enemyChar.characterId}</p>
         <p>名前：${enemyChar.name}</p>
-        <p>基本ダイス：${enemyChar.baseDice}</p>
-        <h4>種目</h4>
+        <p>基礎魔力量：${enemyChar.baseDice}</p>
+        <h4>属性 ／ レベル ／ 発動抵抗</h4>
         <ul>
           ${Object.keys(enemyChar.events).map(i =>
-            `<li>属性：${MAGIC_ATTRIBUTES[i]} ／ レベル ${enemyChar.events[i].dice} ／ 発動抵抗 ${enemyChar.events[i].critical}</li>`
+            `<li>${MAGIC_ATTRIBUTES[i]} ／ ${enemyChar.events[i].dice} ／ ${enemyChar.events[i].critical}</li>`
           ).join("")}
         </ul>
       `;
     }
-
-    // -------------------------
-    // 属性リスト
-    // -------------------------
-const select = document.getElementById("eventSelect");
-select.innerHTML = "";
-
-Object.keys(MAGIC_ATTRIBUTES).forEach(key => {
-  const opt = document.createElement("option");
-  opt.value = key;
-  opt.textContent = MAGIC_ATTRIBUTES[key];
-  select.appendChild(opt);
-});
 
     // -------------------------
     // ダイスロール処理
@@ -158,7 +168,7 @@ Object.keys(MAGIC_ATTRIBUTES).forEach(key => {
     // 1回目ロール
     // -------------------------
     document.getElementById("rollBtn").onclick = () => {
-      const eventNo = document.getElementById("eventSelect").value;
+      const eventNo = String(enemyAttrId);
 
       myRolls = [];
       enemyRolls = [];
@@ -187,15 +197,15 @@ Object.keys(MAGIC_ATTRIBUTES).forEach(key => {
       log.innerHTML += `<p>${renderRollResult("自分 1回目ダイス結果", myFirst, myCrit)}</p>`;
       log.innerHTML += `<p>${renderRollResult("相手 1回目ダイス結果", enFirst, enCrit)}</p>`;
 
-      document.getElementById("rerollBtn").disabled = (myCriticalTargets.length === 0 && enemyCriticalTargets.length === 0);
-      document.getElementById("damageBtn").disabled = true;
+      document.getElementById("rollBtn").disabled = true;
+      calcAchieve();
     };
 
     // -------------------------
     // 再ロール
     // -------------------------
     document.getElementById("rerollBtn").onclick = () => {
-      const eventNo = document.getElementById("eventSelect").value;
+      const eventNo = String(enemyAttrId);
       const myCrit = myChar.events[eventNo].critical;
       const enCrit = enemyChar.events[eventNo].critical;
 
@@ -217,23 +227,23 @@ Object.keys(MAGIC_ATTRIBUTES).forEach(key => {
       const log = document.getElementById("battleLog");
       const myturn = myRolls.length;
       const enturn = enemyRolls.length;
+
       if (myNext.length > 0)
         log.innerHTML += `<p>${renderRollResult(`自分 ${myturn}回目ダイス結果`, myNext, myCrit)}</p>`;
       if (enNext.length > 0)
         log.innerHTML += `<p>${renderRollResult(`相手 ${enturn}回目ダイス結果`, enNext, enCrit)}</p>`;
-
-      // 再ロール終了判定
-      if (myCriticalTargets.length === 0 && enemyCriticalTargets.length === 0) {
-        calcAchieve();
-        document.getElementById("rerollBtn").disabled = true;
-        document.getElementById("damageBtn").disabled = false;
-      }
+      calcAchieve();
     };
 
     // -------------------------
-    // 達成値計算
+    // 達成値計算（戦闘終了）
     // -------------------------
-    function calcAchieve() {
+    async function calcAchieve() {
+      if (myCriticalTargets.length === 0 && enemyCriticalTargets.length === 0) {
+        document.getElementById("rerollBtn").disabled = true;
+      }else{
+        return;
+      }
       const myX = myRolls.length;
       const enX = enemyRolls.length;
 
@@ -248,64 +258,81 @@ Object.keys(MAGIC_ATTRIBUTES).forEach(key => {
       log.innerHTML += `<p>相手 魔法威力：${enemyAchieve}</p>`;
 
       winnerAchieve();
+
+      await updateBattleResult();
     }
 
     // -------------------------
-    // ダメージ計算
-    // -------------------------
-document.getElementById("damageBtn").onclick = () => {
-  // ダイス個数 = 10の位 + 1
-  const myDiceCount = Math.floor(myAchieve / 10) + 1;
-  const enDiceCount = Math.floor(enemyAchieve / 10) + 1;
-
-  // ダイスを複数振る
-  const myDiceArr = rollDice(myDiceCount);
-  const enDiceArr = rollDice(enDiceCount);
-
-  // ダメージは合計値
-  myDamage = myDiceArr.reduce((a,b)=>a+b, 0);
-  enDamage = enDiceArr.reduce((a,b)=>a+b, 0);
-
-  const log = document.getElementById("battleLog");
-
-  log.innerHTML += `<p>自分 ダメージ計算結果：${myDiceArr.join(",")}</p>`;
-  log.innerHTML += `<p>自分 ダメージ：${myDamage}</p>`;
-
-  log.innerHTML += `<p>相手 ダメージ計算結果：${enDiceArr.join(",")}</p>`;
-  log.innerHTML += `<p>相手 ダメージ：${enDamage}</p>`;
-  winnerDamage();
-};
-    // -------------------------
-    // 勝者判定
+    // 勝者判定（達成値）
     // -------------------------
     function winnerAchieve() {
-  let winner = "";
-  if (myAchieve > enemyAchieve) {
-    winner = `${myChar.name}（自分）`;
-  } else if (myAchieve < enemyAchieve) {
-    winner = `${enemyChar.name}（相手）`;
-  } else {
-    winner = "引き分け";
-  }
+      let winner = "";
+      if (myAchieve > enemyAchieve) {
+        winner = `${myChar.name}（自分）`;
+      } else if (myAchieve < enemyAchieve) {
+        winner = `${enemyChar.name}（相手）`;
+      } else {
+        winner = "引き分け";
+      }
 
-  const log = document.getElementById("battleLog");
-  log.innerHTML += `<h3>勝者：${winner}</h3>`;
+      const log = document.getElementById("battleLog");
+      log.innerHTML += `<h3>勝者：${winner}</h3>`;
     }
 
-    function winnerDamage() {
-  let winner = "";
-  if (myDamage > enDamage) {
-    winner = `${myChar.name}（自分）`;
-  } else if (myDamage < enDamage) {
-    winner = `${enemyChar.name}（相手）`;
-  } else {
-    winner = "引き分け";
-  }
+    // -------------------------
+    // 戦闘結果の Firestore 更新（達成値ベース）
+    // -------------------------
+    async function updateBattleResult() {
+      const attrId = String(enemyAttrId);
 
-  const log = document.getElementById("battleLog");
-  log.innerHTML += `<h3>勝者：${winner}</h3>`;
+      const myRef = db.collection("characters").doc(String(myChar.characterId));
+      const champRef = db.collection("champions").doc(attrId);
+      const maxChampRef = db.collection("maxAchieveChampions").doc(attrId);
+
+      const champSnap = await champRef.get();
+      const maxChampSnap = await maxChampRef.get();
+
+      const champData = champSnap.exists ? champSnap.data() : { championId: 0, winStreak: 0 };
+      const maxChampData = maxChampSnap.exists ? maxChampSnap.data() : { championId: 0, maxAchieve: 0 };
+
+      // --- 自分の最大威力更新 ---
+      const myCurrentMax = myChar.maxAchieve || 0;
+      if (myAchieve > myCurrentMax) {
+        await myRef.update({
+          maxAchieve: myAchieve
+        });
+      }
+
+      // --- 勝敗処理（達成値で判定） ---
+      if (myAchieve > enemyAchieve) {
+        await champRef.set({
+          championId: myChar.characterId,
+          winStreak: 1,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } else if (myAchieve < enemyAchieve) {
+        const currentStreak = champData.winStreak || 0;
+        await champRef.update({
+          winStreak: currentStreak + 1,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+
+      // --- 最大威力チャンピオン更新 ---
+      const winnerAchieve = Math.max(myAchieve, enemyAchieve);
+      const winnerId = (myAchieve > enemyAchieve)
+        ? myChar.characterId
+        : enemyChar.characterId;
+
+      const currentMaxAchieve = maxChampData.maxAchieve || 0;
+      if (winnerAchieve > currentMaxAchieve) {
+        await maxChampRef.set({
+          championId: winnerId,
+          maxAchieve: winnerAchieve,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
     }
-
   </script>
 </body>
 </html>
