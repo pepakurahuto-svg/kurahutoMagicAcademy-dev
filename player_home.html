@@ -403,7 +403,6 @@
     // キャラクター削除
     // -------------------------
     document.getElementById("character_delete").onclick = async () => {
-      // ★ 選択されているチェックボックスを全部取得
       const selectedList = document.querySelectorAll('input[name="charSelect"]:checked');
 
       if (selectedList.length === 0) {
@@ -416,14 +415,15 @@
         return;
       }
 
-      const charId = selectedList[0].value;
+      // ★ ここだけ修正：数値化する
+      const charId = Number(selectedList[0].value);
 
       // ★ 勝ち抜きチャンピオン判定
       let isChampion = false;
 
       for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
         const snap = await db.collection("champions").doc(attrId).get();
-        if (snap.exists && snap.data().championId === charId) {
+        if (snap.exists && Number(snap.data().championId) === charId) {
           isChampion = true;
         }
       }
@@ -431,45 +431,16 @@
       // ★ 最大威力チャンピオン判定
       for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
         const snap = await db.collection("maxAchieveChampions").doc(attrId).get();
-        if (snap.exists && snap.data().championId === charId) {
+        if (snap.exists && Number(snap.data().championId) === charId) {
           isChampion = true;
         }
       }
-
-console.log("=== 型チェック開始 ===");
-console.log("選択された charId:", charId, "typeof:", typeof charId);
-
-for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
-  const snap = await db.collection("champions").doc(attrId).get();
-  if (snap.exists) {
-    console.log(
-      `champions[${attrId}] championId:`,
-      snap.data().championId,
-      "typeof:",
-      typeof snap.data().championId
-    );
-  }
-}
-
-for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
-  const snap = await db.collection("maxAchieveChampions").doc(attrId).get();
-  if (snap.exists) {
-    console.log(
-      `maxAchieveChampions[${attrId}] championId:`,
-      snap.data().championId,
-      "typeof:",
-      typeof snap.data().championId
-    );
-  }
-}
-console.log("=== 型チェック終了 ===");
 
       if (isChampion) {
         alert("このキャラは覇者もくしは王のため削除できません");
         return;
       }
 
-      // ★ 削除確認
       const ok = confirm("キャラを削除してもよろしいですか？");
       if (!ok) return;
 
