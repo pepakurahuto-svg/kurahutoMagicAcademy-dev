@@ -61,8 +61,8 @@
 
   <h3>バトル説明</h3>
   <p>
-    プレイヤーホームで選択した自分のキャラと、<br>
-    対戦したい属性チャンピオンでバトルを行います。<br>
+    プレイヤーホームで選択した自分の生徒と、<br>
+    対戦したい属性の勝ち抜き最優秀生徒でバトルを行います。<br>
     バトル属性は、プレイヤーホームで選択した属性で固定されます。
   </p>
 
@@ -87,6 +87,7 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+    let playerRef = null;
 
     let myChar = null;
     let enemyChar = null;
@@ -113,15 +114,18 @@
       enemyAttrId = sessionStorage.getItem("enemyAttrId");
 
       if (!myId || !enemyAttrId) {
-        alert("キャラまたは対戦属性が選択されていません");
+        alert("生徒または対戦属性が選択されていません");
         location.href = "player_home.html";
         return;
       }
 
+      //自分のプレイヤーデータセット
+      playerRef = db.collection("players").doc(user.uid);
+
       // 自分のキャラ
       const mySnap = await db.collection("characters").doc(myId).get();
       if (!mySnap.exists) {
-        alert("自分のキャラ情報が取得できませんでした");
+        alert("自分の生徒情報が取得できませんでした");
         location.href = "player_home.html";
         return;
       }
@@ -130,7 +134,7 @@
       // 属性チャンピオン情報
       const champSnap = await db.collection("champions").doc(String(enemyAttrId)).get();
       if (!champSnap.exists) {
-        alert("この属性のチャンピオンが存在しません");
+        alert("この属性の勝ち抜き最優秀生徒が存在しません");
         location.href = "player_home.html";
         return;
       }
@@ -143,7 +147,7 @@
       // チャンピオンのキャラ情報
       const enemySnap = await db.collection("characters").doc(enemyId).get();
       if (!enemySnap.exists) {
-        alert("チャンピオンのキャラ情報が取得できませんでした");
+        alert("勝ち抜き最優秀生徒の生徒情報が取得できませんでした");
         location.href = "player_home.html";
         return;
       }

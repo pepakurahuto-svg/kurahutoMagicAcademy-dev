@@ -103,7 +103,7 @@
     <h3>スタミナ</h3>
 
     <!-- キャラ作成スタミナ -->
-    <h4>キャラ作成スタミナ</h4>
+    <h4>生徒入学スタミナ</h4>
     <div><span id="createStaminaText"></span></div>
     <div class="staminaBar" id="createStaminaBar"></div>
     <p id="nextCreateRecoveryText"></p>
@@ -116,10 +116,10 @@
   </div>
 
   <!-- チャンピオン表示 -->
-  <h2>チャンピオン一覧</h2>
+  <h2>最優秀生徒一覧</h2>
   <div id="championsArea"></div>
 
-  <h2>あなたのキャラクター一覧</h2>
+  <h2>あなたの生徒一覧</h2>
   <div id="charactersArea"></div>
 
   <div id="pagingArea">
@@ -129,17 +129,17 @@
   </div>
 
   <p id="status"></p>
-  <button onclick="location.href='character_create.html'">キャラ作成</button><br>
+  <button onclick="location.href='character_create.html'">生徒入学（作成）</button><br>
   <!-- ★ バトル説明文 -->
   <p id="battleDescription">
-    バトルを開始するには、まず自分のキャラを選択し、<br>
-    対戦したい相手（属性チャンピオン）を選んでください。
+    バトルを開始するには、まず自分の生徒を選択し、<br>
+    対戦したい相手（属性勝ち抜き最優秀生徒）を選んでください。
   </p>
   <!-- ★ 対戦相手選択コンボボックス -->
   <label for="enemySelect">対戦相手：</label>
   <select id="enemySelect"></select>
   <button id="battleBtn">バトル開始</button><br>
-  <button id="character_delete">キャラ削除</button><br>
+  <button id="character_delete">生徒卒業（削除）</button><br>
   <button onclick="logout()">ログアウト</button><br>
 
   <!-- Firebase SDK -->
@@ -327,7 +327,7 @@
     document.getElementById("battleBtn").onclick = () => {
       const selected = document.querySelector('input[name="charSelect"]:checked');
       if (!selected) {
-        alert("自分のキャラを選択してください");
+        alert("自分の生徒を選択してください");
         return;
       }
 
@@ -403,8 +403,8 @@
             champHtml = `
               <p>
                 <strong>${MAGIC_ATTRIBUTE_CHAMPION[attrId]}(勝ち抜き)</strong><br>
-                キャラ名：${champChar.name}<br>
-                作成者：${creatorDisplay}<br>
+                生徒名：${champChar.name}<br>
+                担当教授：${creatorDisplay}<br>
                 基礎魔力量：${champChar.baseDice}<br>
                 レベル：${dice}<br>
                 発動抵抗：${critical}<br>
@@ -413,10 +413,10 @@
               </p>
             `;
           } else {
-            champHtml = `<p>勝ち抜きチャンピオン：キャラ情報が見つかりません</p>`;
+            champHtml = `<p>勝ち抜き最優秀生徒：生徒情報が見つかりません</p>`;
           }
         } else {
-          champHtml = `<p>勝ち抜きチャンピオン：未設定</p>`;
+          champHtml = `<p>勝ち抜き最優秀生徒：未設定</p>`;
         }
 
         // 最大魔法威力チャンピオン
@@ -444,8 +444,8 @@
             maxHtml = `
               <p>
                 <strong>${MAGIC_ATTRIBUTE_MAXDAMAGE[attrId]}(最大威力)</strong><br>
-                キャラ名：${maxChar.name}<br>
-                作成者：${creatorDisplay}<br>
+                生徒名：${maxChar.name}<br>
+                担当教授：${creatorDisplay}<br>
                 基礎魔力量：${maxChar.baseDice}<br>
                 レベル：${dice}<br>
                 発動抵抗：${critical}<br>
@@ -453,10 +453,10 @@
               </p>
             `;
           } else {
-            maxHtml = `<p>最大威力チャンピオン：キャラ情報が見つかりません</p>`;
+            maxHtml = `<p>最大威力最優秀生徒：生徒情報が見つかりません</p>`;
           }
         } else {
-          maxHtml = `<p>最大威力チャンピオン：未設定</p>`;
+          maxHtml = `<p>最大威力最優秀生徒：未設定</p>`;
         }
 
         // まとめて表示
@@ -495,12 +495,12 @@
       const selectedList = document.querySelectorAll('input[name="charSelect"]:checked');
 
       if (selectedList.length === 0) {
-        alert("削除するキャラを選択してください");
+        alert("卒業する（削除）生徒を選択してください");
         return;
       }
 
       if (selectedList.length > 1) {
-        alert("キャラ削除は1体のみ可能です。1体だけ選択してください。");
+        alert("卒業する生徒は同時に1体のみ選択可能です。1体だけ選択してください。");
         return;
       }
 
@@ -526,15 +526,15 @@
       }
 
       if (isChampion) {
-        alert("このキャラは覇者もくしは王のため削除できません");
+        alert("この生徒は覇者もくしは王のため卒業できません");
         return;
       }
 
-      const ok = confirm("キャラを削除してもよろしいですか？");
+      const ok = confirm("生徒を卒業（削除）させてもよろしいですか？");
       if (!ok) return;
 
       await db.collection("characters").doc(String(charId)).delete();//Stringで渡さないとエラー
-      alert("キャラを削除しました");
+      alert("生徒が卒業しました");
       location.reload();
     };
 

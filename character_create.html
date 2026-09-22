@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>キャラクター作成</title>
+  <title>生徒入学（作成）</title>
   <style>
     body { font-family: sans-serif; }
     .event-block { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
@@ -12,9 +12,9 @@
 </head>
 
 <body>
-  <h1>キャラクター作成</h1>
+  <h1>生徒入学（作成）</h1>
 
-  <label>キャラ名：</label>
+  <label>生徒名：</label>
   <input type="text" id="charName">
 
   <p>経験値：360</p>
@@ -41,8 +41,8 @@
 
   <!-- 作成結果 -->
   <div id="resultArea" class="hidden">
-    <p>キャラが作成されました！</p>
-    <p>キャラID：<span id="resultId"></span></p>
+    <p>生徒が入学しました！</p>
+    <p>学籍番号：<span id="resultId"></span></p>
     <button id="backHome">プレイヤーホームに戻る</button>
   </div>
 
@@ -60,6 +60,7 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+    let playerRef = null;
 
     // -------------------------
     // 初期値
@@ -73,6 +74,19 @@
       3: { dice: 0, critical: 10 },
       4: { dice: 0, critical: 10 }
     };
+
+    // -------------------------
+    // プレイヤー情報読み込み
+    // -------------------------
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        location.href = "index.html";
+        return;
+      }
+
+      //自分のプレイヤーデータセット
+      playerRef = db.collection("players").doc(user.uid);
+    });
 
     // -------------------------
     // UI生成（種目）
@@ -186,9 +200,12 @@
     document.getElementById("confirmOk").onclick = async () => {
       const charName = document.getElementById("charName").value;
       if (!charName) {
-        alert("キャラ名を入力してください");
+        alert("生徒名を入力してください");
         return;
       }
+      // ★スタミナ消費
+      const ok = await consumeCreateStamina(playerRef);
+      if (!ok) return;  // スタミナ不足ならキャラ作成を中断
 
       const playerId = auth.currentUser.uid;
 
@@ -223,6 +240,49 @@
       disableAllButtons();
     };
 
+    // -------------------------
+    // キャラ作成スタミナ計算
+    // -------------------------
+    async function getCreateStamina(playerRef) {
+      const snap = await playerRef.get();
+      const data = snap.data();
+
+      const maxStamina = 10;
+      const last = data.last_create_recovery.toDate();
+      const now = new Date();
+
+      const diffHours = Math.floor((now - last) / (1000 * 60 * 60));
+      let stamina = data.create_stamina;
+
+      if (diffHours > 0 && stamina < maxStamina) {
+        stamina = Math.min(maxStamina, stamina + diffHours);
+      }
+
+      return stamina;
+    }
+    // -------------------------
+    // スタミナ１消費
+    // ------------------------- 
+    async function consumeCreateStamina(playerRef) {
+      const current = await getCreateStamina(playerRef);
+
+      if (current <= 0) {
+        alert("生徒入学スタミナが足りません！");
+        return false;
+      }
+
+      const newStamina = current - 1;
+
+      await playerRef.update({
+        create_stamina: newStamina,
+        last_create_recovery: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      return true;
+    }
+    // -------------------------
+    // ボタン無効化
+    // ------------------------- 
     function disableAllButtons() {
       const buttons = document.querySelectorAll("button");
       buttons.forEach(btn => {
