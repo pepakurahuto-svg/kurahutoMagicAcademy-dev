@@ -115,6 +115,8 @@
     <p id="nextBattleRecoveryText"></p>
   </div>
 
+  <button id="reloadBtn">リロード</button><br>
+  
   <!-- チャンピオン表示 -->
   <h2>最優秀生徒一覧</h2>
   <div id="championsArea"></div>
@@ -248,7 +250,7 @@
       document.getElementById("createStaminaBar").style.width = `${(createStamina / maxStamina) * 100}%`;
       document.getElementById("battleStaminaBar").style.width = `${(battleStamina / maxStamina) * 100}%`;
 
-      document.getElementById("nextCreateRecoveryText").innerText = `作成スタミナ回復まで：${remainingCreate}`;
+      document.getElementById("nextCreateRecoveryText").innerText = `入学スタミナ回復まで：${remainingCreate}`;
       document.getElementById("nextBattleRecoveryText").innerText = `バトルスタミナ回復まで：${remainingBattle}`;
 
       // ★変更：満タン時だけテキスト色を変える
@@ -296,8 +298,8 @@
               </li>
             `).join("")}
           </ul>
-          <p>作成日時：${createdAtLocal}</p>
-          <p>作成Ver：${ch.createdVersion}</p>
+          <p>入学日時：${createdAtLocal}</p>
+          <p>入学Ver：${ch.createdVersion}</p>
         `;
         area.appendChild(div);
       });
@@ -541,6 +543,11 @@
     // ページ読み込み時に実行
     window.onload = () => {
       loadChampions();
+    };
+
+    //リロード
+    document.getElementById("reloadBtn").onclick = () => {
+      location.reload();
     };
 
     // ログアウト
