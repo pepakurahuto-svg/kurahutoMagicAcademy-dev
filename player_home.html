@@ -226,14 +226,27 @@
       const diffCreateHours = Math.floor((now - lastCreateRecovery) / (1000 * 60 * 60));
       if (diffCreateHours > 0 && createStamina < maxStamina) {
         createStamina = Math.min(maxStamina, createStamina + diffCreateHours);
-        lastCreateRecovery = now;
+        // 回復できる回数（スタミナ上限を超えない）
+        const recoverCount = Math.min(diffCreateHours, maxStamina - createStamina);
+
+        // スタミナ回復
+        createStamina += recoverCount;
+
+        // lastCreateRecovery を「回復した分だけ」進める
+        lastCreateRecovery += recoverCount * (1000 * 60 * 60);
       }
 
       // --- バトルスタミナ回復 ---
       const diffBattleHours = Math.floor((now - lastBattleRecovery) / (1000 * 60 * 60));
       if (diffBattleHours > 0 && battleStamina < maxStamina) {
-        battleStamina = Math.min(maxStamina, battleStamina + diffBattleHours);
-        lastBattleRecovery = now;
+        // 回復できる回数（スタミナ上限を超えない）
+        const recoverCount = Math.min(diffBattleHours, maxStamina - battleStamina);
+
+        // スタミナ回復
+        battleStamina += recoverCount;
+
+        // lastBattleRecovery を「回復した分だけ」進める
+        lastBattleRecovery += recoverCount * (1000 * 60 * 60);
       }
 
       // --- 次回回復までの残り時間（個別） ---
