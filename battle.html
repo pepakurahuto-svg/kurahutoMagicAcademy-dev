@@ -184,7 +184,7 @@
           <li>属性：${MAGIC_ATTRIBUTES[eventNo]}</li>
           <li>レベル：${myEvent.dice}</li>
           <li>発動抵抗：${myEvent.critical}</li>
-          <li>最大威力：${myChar.maxAchieve ?? 0}</li>
+          <li>最大威力：${myEvent.maxAchieve ?? 0}</li>
         </ul>
       `;
 
@@ -207,7 +207,7 @@
           <li>属性：${MAGIC_ATTRIBUTES[eventNo]}</li>
           <li>レベル：${enEvent.dice}</li>
           <li>発動抵抗：${enEvent.critical}</li>
-          <li>最大威力：${enemyChar.maxAchieve ?? 0}</li>
+          <li>最大威力：${enEvent.maxAchieve ?? 0}</li>
         </ul>
       `;
 
