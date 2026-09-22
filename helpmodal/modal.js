@@ -3,7 +3,7 @@ async function openHelpModal() {
   const content = document.getElementById("modalContent");
 
   // help.html を読み込む
-  const res = await fetch("/help.html");
+  const res = await fetch("help.html");
   const html = await res.text();
 
   content.innerHTML = html;
