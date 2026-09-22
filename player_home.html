@@ -142,6 +142,10 @@
   <select id="enemySelect"></select>
   <button id="battleBtn">バトル開始</button><br>
   <button id="character_delete">生徒卒業（削除）</button><br>
+  <button id="helpBtn">ヘルプ</button>
+<div id="modalOverlay" onclick="closeHelpModal()">
+  <div id="modalContent" onclick="event.stopPropagation();"></div>
+</div><br>
   <button onclick="logout()">ログアウト</button><br>
 
   <!-- Firebase SDK -->
@@ -150,6 +154,7 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <script src="firebase-config.js"></script>
   <script src="attributes.js"></script>
+  <script src="/modal/modal.js"></script>
 
   <script>
     firebase.initializeApp(firebaseConfig);
@@ -554,6 +559,9 @@
     function logout() {
       auth.signOut().then(() => location.href = "index.html");
     }
+
+    //help表示
+    document.getElementById("helpBtn").onclick = openHelpModal;
   </script>
 </body>
 </html>
