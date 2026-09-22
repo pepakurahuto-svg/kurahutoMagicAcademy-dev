@@ -18,6 +18,8 @@
 <br>
   <p>あなたの研究と育成が、学院の歴史に新たな一頁を刻むでしょう。</p><br><br>
 
+  <p id="version"></p><br>
+
   <h2>ログイン方法を選択してください</h2>
 <p>
   ログインを行うことで、<a href="terms.html" target="_blank">利用規約・プライバシーポリシー</a>に同意したものとみなします。
@@ -47,6 +49,46 @@
     <input id="newPassword" type="password" placeholder="パスワード（必須）">
     <button id="createAccountBtn">アカウント作成</button>
   </div>
+<hr>
+
+<h2>リリースノート</h2>
+
+<h3>version 1.0.0（2026/09/23）</h3>
+<ul>
+  <li>クラフト魔法学院サービス公開</li>
+  <li>Googleログイン / メールログインに対応</li>
+  <li>生徒入学（キャラクター作成）機能を実装</li>
+  <li>学院内バトル機能を実装</li>
+  <li>スタミナシステム（入学・バトル）を導入</li>
+</ul>
+
+<h2>追加アイデア</h2>
+<ul>
+  <li>画面デザインの追加（背景画像やアイコンなど）</li>
+  <li>キャラに見た目要素を付ける（画像アップロードとか）</li>
+  <li>キャラ作成時に育成ゲーム要素（パワプロのサクセスのようなもの）</li>
+  <li>キャラ作成後の育成要素（10連勝で経験値1もらえるとか）</li>
+  <li>キャラ作成時に得意・不得意の導入（火が得意なら火の経験値が少なくて済むなど）</li>
+  <li>キャラ作成時に学級の導入（火が伸びやすいファイア学級など）</li>
+  <li>キャラ作成時に継承の導入（ウマ娘の親など）</li>
+  <li>スキル・呪文の導入（ダブルクロスの技）</li>
+  <li>複数キャラで戦う団体戦（３体持ち込みで火のバトルは火が得意なキャラが行うなど）</li>
+  <li>シナリオ形式での団体戦（シナリオに沿って物語が進んで途中で戦闘が入る）</li>
+  <li>団体戦リアルタイムバトル（PvP）</li>
+  <li>キャラ作成時に種族を導入：種族ごとに初期値が変わる（エルフは初期魔力が高いけど火が-2されるなど）</li>
+  <li>バトルフィールドを導入：属性バフやデバフがかかるなど（火山フィールドは火が+2されるなど）</li>
+  <li>アイテムの導入（一時的に能力を上げる、1回目のダイスロール時だけダイスが+5など）</li>
+  <li>固定値の導入（最後に魔法威力が+3されるなど）</li>
+  <li>試練（複数キャラを勝ち抜く）の導入</li>
+  <li>キャラランキングの導入</li>
+  <li>クラス分けの導入（属性ごとに戦績上位10%がゴールド、50%がシルバーなど）</li>
+  <li>研究室毎のポイント・ランキングの導入</li>
+</ul>
+
+<h2>不具合一覧</h2>
+<ul>
+  <li></li>
+</ul>
 
   <p id="status"></p>
 
@@ -56,8 +98,10 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <!-- Firebase config -->
   <script src="firebase-config.js"></script>
+  <script src="version.js"></script>
   <script>
     const status = document.getElementById("status");
+    document.getElementById("version").innerText = "version:" + GAME_VERSION;
 
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
