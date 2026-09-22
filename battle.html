@@ -227,11 +227,53 @@
         v >= critical ? `<span class="red">${v}</span>` : v
       ).join(",");
     }
+    // -------------------------
+    // 現在のスタミナ計算
+    // -------------------------
+    async function getBattleStamina(playerRef) {
+      const snap = await playerRef.get();
+      const data = snap.data();
 
+      const maxStamina = 10;
+      const last = data.last_battle_recovery.toDate();
+      const now = new Date();
+
+      const diffHours = Math.floor((now - last) / (1000 * 60 * 60));
+      let stamina = data.battle_stamina;
+
+      if (diffHours > 0 && stamina < maxStamina) {
+        stamina = Math.min(maxStamina, stamina + diffHours);
+      }
+
+      return stamina;
+    }
+    // -------------------------
+    // スタミナ１消費して登録
+    // -------------------------
+    async function consumeBattleStamina(playerRef) {
+      const current = await getBattleStamina(playerRef);
+
+      if (current <= 0) {
+        alert("スタミナが足りません！");
+        return false;
+      }
+
+      const newStamina = current - 1;
+
+      await playerRef.update({
+        battle_stamina: newStamina,
+        last_battle_recovery: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      return true;
+    }
     // -------------------------
     // 1回目ロール
     // -------------------------
-    document.getElementById("rollBtn").onclick = () => {
+    document.getElementById("rollBtn").onclick = async () => {
+      const ok = await consumeBattleStamina(playerRef);
+      if (!ok) return;  // スタミナ不足なら処理中断
+
       const eventNo = String(enemyAttrId);
 
       myRolls = [];
