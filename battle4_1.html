@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>バトル</title>
+  <title>全属性バトル</title>
   <style>
     body { font-family: sans-serif; }
     .charBox {
@@ -45,7 +45,7 @@
 </head>
 
 <body>
-  <h1>バトル</h1>
+  <h1>全属性バトル</h1>
 
   <div class="flex">
     <div class="charBox">
@@ -62,8 +62,8 @@
   <h3>バトル説明</h3>
   <p>
     プレイヤーホームで選択した自分の生徒と、<br>
-    対戦したい属性の覇者でバトルを行います。<br>
-    バトル属性は、プレイヤーホームで選択した属性で固定されます。<br>
+    全属性覇者でバトルを行います。<br>
+    勝ち数が同じ場合は、合計威力が高い方が勝ちになります。<br>
     はじめにダイスロールを行ってください。<br>
     ダイスロールの結果で再ロールが行える場合、再ロールボタンが有効になります。<br>
     再ロールが出来る間は再ロールを行ってください。<br>
@@ -100,6 +100,10 @@
     let myChar = null;
     let enemyChar = null;
     let enemyAttrId = null;
+    let battleAttrId = null; //0923battleと違うところ
+    let mywins = 0; //0923battleと違うところ
+    let ememywins = 0; //0923battleと違うところ
+    let drows = 0; //0923battleと違うところ
 
     let myRolls = [];
     let enemyRolls = [];
@@ -119,7 +123,7 @@
       }
 
       const myId = sessionStorage.getItem("selectedCharId");
-      enemyAttrId = sessionStorage.getItem("enemyAttrId");
+      enemyAttrId = 0; //0923battleと違うところ
 
       if (!myId || !enemyAttrId) {
         alert("生徒または対戦属性が選択されていません");
@@ -139,7 +143,7 @@
       }
       myChar = mySnap.data();
 
-      // 属性チャンピオン情報
+      // 全属性チャンピオン情報
       const champSnap = await db.collection("champions").doc(String(enemyAttrId)).get();
       if (!champSnap.exists) {
         alert("この属性の勝ち抜き最優秀生徒が存在しません");
@@ -178,7 +182,8 @@
       const myArea = document.getElementById("myCharInfo");
       const enArea = document.getElementById("enemyCharInfo");
 
-      const eventNo = String(enemyAttrId);
+      battleAttrId++; //0923battleと違うところ
+      const eventNo = String(battleAttrId); //0923battleと違うところ
       const myEvent = myChar.events[eventNo];
       const enEvent = enemyChar.events[eventNo];
       const attrColor = MAGIC_ATTRIBUTE_COLORS[eventNo];
@@ -315,10 +320,14 @@
     // 1回目ロール
     // -------------------------
     document.getElementById("rollBtn").onclick = async () => {
+      // battleAttrId が 1 以外ならスタミナ処理しない
+      if (String(battleAttrId) !== "1") {
+        return;
+      }
       const ok = await consumeBattleStamina(playerRef);
       if (!ok) return;  // スタミナ不足なら処理中断
 
-      const eventNo = String(enemyAttrId);
+      const eventNo = String(battleAttrId);
 
       myRolls = [];
       enemyRolls = [];
@@ -355,7 +364,7 @@
     // 再ロール
     // -------------------------
     document.getElementById("rerollBtn").onclick = () => {
-      const eventNo = String(enemyAttrId);
+      const eventNo = String(battleAttrId);
       const myCrit = myChar.events[eventNo].critical;
       const enCrit = enemyChar.events[eventNo].critical;
 
@@ -391,26 +400,31 @@
     async function calcAchieve() {
       if (myCriticalTargets.length === 0 && enemyCriticalTargets.length === 0) {
         document.getElementById("rerollBtn").disabled = true;
+        const myX = myRolls.length;
+        const enX = enemyRolls.length;
+
+        const myMax = Math.max(...myRolls[myRolls.length - 1]);
+        const enMax = Math.max(...enemyRolls[enemyRolls.length - 1]);
+
+        myAchieve = 10 * (myX - 1) + myMax;
+        enemyAchieve = 10 * (enX - 1) + enMax;
+
+        const log = document.getElementById("battleLog");
+        log.innerHTML += `<p>自分 魔法威力：${myAchieve}</p>`;
+        log.innerHTML += `<p>相手 魔法威力：${enemyAchieve}</p>`;
+
+        winnerAchieve();
+
+        await updateBattleResult();
+        // battleAttrId が 4 以外なら次の属性勝負
+        if (String(battleAttrId) !== "4") {          
+          document.getElementById("rollBtn").disabled = false;
+          renderCharInfo();
+        }
       }else{
         document.getElementById("rerollBtn").disabled = false;
         return;
       }
-      const myX = myRolls.length;
-      const enX = enemyRolls.length;
-
-      const myMax = Math.max(...myRolls[myRolls.length - 1]);
-      const enMax = Math.max(...enemyRolls[enemyRolls.length - 1]);
-
-      myAchieve = 10 * (myX - 1) + myMax;
-      enemyAchieve = 10 * (enX - 1) + enMax;
-
-      const log = document.getElementById("battleLog");
-      log.innerHTML += `<p>自分 魔法威力：${myAchieve}</p>`;
-      log.innerHTML += `<p>相手 魔法威力：${enemyAchieve}</p>`;
-
-      winnerAchieve();
-
-      await updateBattleResult();
     }
 
     // -------------------------
@@ -422,12 +436,15 @@
       if (myAchieve > enemyAchieve) {
         winner = `${myChar.name}（自分）`;
         color = "red";
+        mywins++;
       } else if (myAchieve < enemyAchieve) {
         winner = `${enemyChar.name}（相手）`;
         color = "blue";
+        enemywins++;
       } else {
-        winner = "引き分け（相手）";
+        winner = "引き分け";
         color = "black";
+        drows++;
       }
 
       const log = document.getElementById("battleLog");
@@ -439,6 +456,7 @@
     // -------------------------
     async function updateBattleResult() {
       const attrId = String(enemyAttrId);
+      const eventsAttrId = String(battleAttrId);
 
       const myRef = db.collection("characters").doc(String(myChar.characterId));
       const enemyRef = db.collection("characters").doc(String(enemyChar.characterId));
@@ -454,56 +472,59 @@
       const log = document.getElementById("battleLog");
 
       // --- 自分の最大威力更新（属性ごと） ---
-      const myCurrentMax = myChar.events[attrId]?.maxAchieve || 0;
+      const myCurrentMax = myChar.events[eventsAttrId]?.maxAchieve || 0;
       if (myAchieve > myCurrentMax) {
         await myRef.update({
-          [`events.${attrId}.maxAchieve`]: myAchieve
+          [`events.${eventsAttrId}.maxAchieve`]: myAchieve
         });
         log.innerHTML += `<p style="color:red">自分の最大威力が更新されました！（${myCurrentMax} → ${myAchieve}）</p>`;
       }
 
       // --- 相手の最大威力更新（属性ごと） ---
-      const enemyCurrentMax = enemyChar.events[attrId]?.maxAchieve || 0;
+      const enemyCurrentMax = enemyChar.events[eventsAttrId]?.maxAchieve || 0;
       if (enemyAchieve > enemyCurrentMax) {
         await enemyRef.update({
-          [`events.${attrId}.maxAchieve`]: enemyAchieve
+          [`events.${eventsAttrId}.maxAchieve`]: enemyAchieve
         });
         log.innerHTML += `<p style="color:blue">相手の最大威力が更新されました！（${enemyCurrentMax} → ${enemyAchieve}）</p>`;
       }
 
-      // --- 勝敗処理（達成値で判定） ---
-      if (myAchieve > enemyAchieve) {
-        await champRef.set({
-          championId: myChar.characterId,
-          winStreak: 1,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        log.innerHTML += `<p style="color:red">あなたが新しい ${MAGIC_ATTRIBUTE_CHAMPION[attrId]} になりました！</p>`;
-      } else {
-        const currentStreak = champData.winStreak || 0;
-        await champRef.update({
-          winStreak: currentStreak + 1,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-      }
-
-      // --- 最大威力チャンピオン更新 ---
-      const winnerAchieve = Math.max(myAchieve, enemyAchieve);
-      const winnerId = (myAchieve > enemyAchieve)
-        ? myChar.characterId
-        : enemyChar.characterId;
-
-      const currentMaxAchieve = maxChampData.maxAchieve || 0;
-      if (winnerAchieve > currentMaxAchieve) {
-        await maxChampRef.set({
-          championId: winnerId,
-          maxAchieve: winnerAchieve,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+      // --- 最終処理 ---
+      if (String(battleAttrId) == "4") {          
+        // --- 勝敗処理（勝敗数→達成値合計で判定） ---
         if (myAchieve > enemyAchieve) {
-          log.innerHTML += `<p style="color:red">あなたが新しい ${MAGIC_ATTRIBUTE_MAXDAMAGE[attrId]} になりました！</p>`;
-        }else{
-          log.innerHTML += `<p style="color:blue">相手が新しい ${MAGIC_ATTRIBUTE_MAXDAMAGE[attrId]} になりました！</p>`;
+          await champRef.set({
+            championId: myChar.characterId,
+            winStreak: 1,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          log.innerHTML += `<p style="color:red">あなたが新しい ${MAGIC_ATTRIBUTE_CHAMPION[attrId]} になりました！</p>`;
+        } else {
+          const currentStreak = champData.winStreak || 0;
+          await champRef.update({
+            winStreak: currentStreak + 1,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        }
+        
+        // --- 最大威力チャンピオン更新 ---
+        const winnerAchieve = Math.max(myAchieve, enemyAchieve);
+        const winnerId = (myAchieve > enemyAchieve)
+          ? myChar.characterId
+          : enemyChar.characterId;
+
+        const currentMaxAchieve = maxChampData.maxAchieve || 0;
+        if (winnerAchieve > currentMaxAchieve) {
+          await maxChampRef.set({
+            championId: winnerId,
+            maxAchieve: winnerAchieve,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          if (myAchieve > enemyAchieve) {
+            log.innerHTML += `<p style="color:red">あなたが新しい ${MAGIC_ATTRIBUTE_MAXDAMAGE[attrId]} になりました！</p>`;
+          }else{
+            log.innerHTML += `<p style="color:blue">相手が新しい ${MAGIC_ATTRIBUTE_MAXDAMAGE[attrId]} になりました！</p>`;
+          }
         }
       }
     }

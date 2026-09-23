@@ -16,6 +16,7 @@ const MAGIC_ATTRIBUTE_COLORS = {
 
 // 属性チャンピオン
 const MAGIC_ATTRIBUTE_CHAMPION = {
+  0: "魔導覇者", // 全属性
   1: "紅炎覇者", // 火
   2: "蒼水覇者", // 水
   3: "翠風覇者", // 風
