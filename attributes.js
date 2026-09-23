@@ -8,6 +8,7 @@ const MAGIC_ATTRIBUTES = {
 
 // 属性カラー
 const MAGIC_ATTRIBUTE_COLORS = {
+  0: "#e8ddff", // 全：やわらかい紫
   1: "#ffdddd", // 火：薄い赤
   2: "#ddeeff", // 水：薄い青
   3: "#ddffdd", // 風：薄い緑

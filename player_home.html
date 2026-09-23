@@ -34,6 +34,14 @@
       white-space: nowrap;
     }
 
+    #allchampionsArea {
+      display: flex;
+      overflow-x: auto;   /* 横スクロール維持 */
+      gap: 16px;          /* カード間の余白を少し広げる */
+      padding: 10px;      /* 内側に余白 */
+      white-space: nowrap;
+    }
+
     .champCard {
       flex: 0 0 auto;     /* 横スクロール用 */
       width: 300px;       /* 情報量に合わせて少し広げる */
@@ -120,6 +128,7 @@
   <!-- チャンピオン表示 -->
   <h2>最優秀生徒一覧</h2>
   <div id="championsArea"></div>
+  <div id="allchampionsArea"></div>
 
   <h2>あなたの生徒一覧</h2>
   <div id="charactersArea"></div>
@@ -498,6 +507,119 @@
       }
     }
     // -------------------------
+    // 全属性チャンピオン表示
+    // -------------------------
+    async function loadallChampions() {
+      const area = document.getElementById("allchampionsArea");
+
+      // ★ キャラ情報を取得
+      async function loadCharacterInfo(charId) {
+        const charSnap = await db.collection("characters")
+          .doc(String(charId))
+          .get();
+
+        return charSnap.exists ? charSnap.data() : null;
+      }
+
+      // ★ プレイヤー名を取得
+      async function loadPlayerName(playerId) {
+        const playerSnap = await db.collection("players")
+          .doc(playerId)
+          .get();
+
+        return playerSnap.exists ? playerSnap.data().name : "不明なプレイヤー";
+      }
+      // チャンピオンが自分のキャラならハイライト表示
+      function highlightCreator(name, playerId) {
+        if (playerId === currentUserId) {
+          return `<strong style="color:red; font-weight:bold;">${name}</strong>`;
+        }
+        return name;
+      }
+      // 勝ち抜きチャンピオン
+      const champSnap = await db.collection("champions").doc(0).get();
+      let champHtml = "";
+      let champChar = null;
+      if (champSnap.exists) {
+        const data = champSnap.data();
+        champChar = await loadCharacterInfo(data.championId);
+        if (champChar) {
+          const creatorName = await loadPlayerName(champChar.playerId);
+          const creatorDisplay = highlightCreator(creatorName, champChar.playerId);
+
+          //基本情報
+          champHtml = `
+            <p>
+              <strong>${MAGIC_ATTRIBUTE_CHAMPION[0]}(勝ち抜き)</strong><br>
+              生徒名：${champChar.name}<br>
+              担当教授：${creatorDisplay}<br>
+              連勝数：${data.winStreak}<br>
+              最大威力：${data.maxAchieve}
+            </p>
+          `;
+          // まとめて表示
+          const div = document.createElement("div");
+          div.className = "champCard";
+
+          // ★ 属性カラーを適用
+          div.style.setProperty("--attr-color", MAGIC_ATTRIBUTE_COLORS[0]);
+
+          div.innerHTML = `
+            <h3>全属性</h3>
+            ${champHtml}
+          `;
+          area.appendChild(div);
+
+          //各属性情報
+          for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
+            const attrName = MAGIC_ATTRIBUTES[attrId];
+            champHtml = "";
+            champChar = null;
+            // ★ 属性ごとの critical を取得
+            const critical = champChar.events && champChar.events[attrId]
+              ? champChar.events[attrId].critical
+              : "不明";
+
+            // ★ 属性ごとの dice を取得
+            const dice = champChar.events && champChar.events[attrId]
+              ? champChar.events[attrId].dice
+              : "不明";
+              
+            // ★ 属性ごとの maxAchieve を取得
+            const maxAchieve = champChar.events && champChar.events[attrId]
+              ? champChar.events[attrId].maxAchieve
+              : "不明";
+
+            champHtml = `
+              <p>
+                基礎魔力量：${champChar.baseDice}<br>
+                レベル：${dice}<br>
+                発動抵抗：${critical}<br>
+                最大威力：${maxAchieve}
+              </p>
+            `;
+
+            // まとめて表示
+            const div = document.createElement("div");
+            div.className = "champCard";
+
+            // ★ 属性カラーを適用
+            div.style.setProperty("--attr-color", MAGIC_ATTRIBUTE_COLORS[attrId]);
+
+            div.innerHTML = `
+              <h3>属性：${attrName}</h3>
+              ${champHtml}
+            `;
+            area.appendChild(div);
+          }
+        }else {
+          champHtml = `<p>勝ち抜き最優秀生徒：生徒情報が見つかりません</p>`;
+        }
+      } else {
+        champHtml = `<p>勝ち抜き最優秀生徒：未設定</p>`;
+      }
+    }
+    // -------------------------
     // 属性チャンピオン選択肢をバトル相手コンボボックスに追加
     // -------------------------
     function loadEnemySelect() {
@@ -564,6 +686,7 @@
     // ページ読み込み時に実行
     window.onload = () => {
       loadChampions();
+      loadallChampions();
     };
 
     //リロード
