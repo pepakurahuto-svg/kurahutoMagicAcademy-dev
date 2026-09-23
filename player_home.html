@@ -427,12 +427,18 @@
             champHtml = `
               <p>
                 <strong>${MAGIC_ATTRIBUTE_CHAMPION[attrId]}(勝ち抜き)</strong><br>
+                連勝数：${data.winStreak}<br>
                 生徒名：${champChar.name}<br>
                 担当教授：${creatorDisplay}<br>
                 基礎魔力量：${champChar.baseDice}<br>
+                <h4>属性 ／ レベル ／ 発動抵抗 ／ 最大威力 </h4>
+                <ul>
+                <li>
+                  ${MAGIC_ATTRIBUTES[attrId]} ／ ${dice} ／ ${critical} ／ ${maxAchieve}
+                </li>
+                </ul>
                 レベル：${dice}<br>
                 発動抵抗：${critical}<br>
-                連勝数：${data.winStreak}<br>
                 最大威力：${maxAchieve}
               </p>
             `;
@@ -471,6 +477,12 @@
                 生徒名：${maxChar.name}<br>
                 担当教授：${creatorDisplay}<br>
                 基礎魔力量：${maxChar.baseDice}<br>
+                <h4>属性 ／ レベル ／ 発動抵抗 ／ 最大威力 </h4>
+                <ul>
+                <li>
+                  ${MAGIC_ATTRIBUTES[attrId]} ／ ${dice} ／ ${critical} ／ ${data.maxAchieve}
+                </li>
+                </ul>
                 レベル：${dice}<br>
                 発動抵抗：${critical}<br>
                 最大威力：${data.maxAchieve}
@@ -543,11 +555,12 @@
           champHtml = `
             <p>
               <strong>${MAGIC_ATTRIBUTE_CHAMPION[0]}(勝ち抜き)</strong><br>
+              連勝数：${data.winStreak}<br>
               生徒名：${champChar.name}<br>
               担当教授：${creatorDisplay}<br>
-              連勝数：${data.winStreak}<br>
-              最大総合威力：${champChar.maxTotalAchieve}<br>
               基礎魔力量：${champChar.baseDice}<br>
+              <h4>属性 ／ レベル ／ 発動抵抗 ／ 最大威力 </h4>
+              <ul>
           `;
 
           //各属性情報
@@ -569,12 +582,20 @@
               : "不明";
 
             champHtml += `
+              <li>
+                ${MAGIC_ATTRIBUTES[attrId]} ／ ${dice} ／ ${critical} ／ ${maxAchieve}
+              </li>
                 <strong>${MAGIC_ATTRIBUTES[attrId]}属性</strong><br>
                 レベル：${dice}<br>
                 発動抵抗：${critical}<br>
                 最大威力：${maxAchieve}<br>
             `;
           }
+          //基本情報
+          champHtml += `
+              </ul>
+              最大総合威力：${champChar.maxTotalAchieve}<br>
+          `;
         }else {
           champHtml = `<p>勝ち抜き最優秀生徒：生徒情報が見つかりません</p>`;
         }

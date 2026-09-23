@@ -79,7 +79,7 @@
   <button id="rerollBtn" disabled>再ロール</button>
 
   <h3>バトルログ</h3>
-  <div id="battleWinLog"></div>
+  <div id="battleWinLog"></div><br>
   <div id="battleLog"></div>
 
   <button onclick="location.href='player_home.html'">プレイヤーホームへ戻る</button>
@@ -485,6 +485,7 @@
       const maxChampData = maxChampSnap.exists ? maxChampSnap.data() : { championId: 0, maxAchieve: 0 };
 
       const log = document.getElementById("battleLog");
+      const blog = document.getElementById("battleWinLog");
 
       // --- 自分の最大威力更新（属性ごと） ---
       const myCurrentMax = myChar.events[eventsAttrId]?.maxAchieve || 0;
@@ -516,6 +517,7 @@
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
           log.innerHTML += `<p style="color:red">あなたが新しい ${MAGIC_ATTRIBUTE_CHAMPION[attrId]} になりました！</p>`;
+          blog.innerHTML += `<p style="color:red">あなたが新しい ${MAGIC_ATTRIBUTE_CHAMPION[attrId]} になりました！</p>`;
         } else {
           const currentStreak = champData.winStreak || 0;
           await champRef.update({
@@ -555,8 +557,10 @@
           });
           if (myTotalAchieve > enemyTotalAchieve) {
             log.innerHTML += `<p style="color:red">あなたが新しい ${MAGIC_ATTRIBUTE_MAXDAMAGE[attrId]} になりました！</p>`;
+            blog.innerHTML += `<p style="color:red">あなたが新しい ${MAGIC_ATTRIBUTE_MAXDAMAGE[attrId]} になりました！</p>`;
           }else{
             log.innerHTML += `<p style="color:blue">相手が新しい ${MAGIC_ATTRIBUTE_MAXDAMAGE[attrId]} になりました！</p>`;
+            blog.innerHTML += `<p style="color:blue">相手が新しい ${MAGIC_ATTRIBUTE_MAXDAMAGE[attrId]} になりました！</p>`;
           }
         }
       }
