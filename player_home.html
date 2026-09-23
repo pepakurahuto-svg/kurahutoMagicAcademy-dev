@@ -22,6 +22,15 @@
     #createStaminaBar {
       background-color: #2196F3; /* 青 */
     }
+    .staminaRow {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .staminaBox {
+      width: 48%; /* 横に2つ並べるための幅 */
+    }
 
     #battleStaminaBar {
       background-color: #f44336; /* 赤 */
@@ -109,17 +118,25 @@
   <div id="staminaArea">
     <h3>スタミナ</h3>
 
-    <!-- キャラ作成スタミナ -->
-    <h4>生徒入学スタミナ</h4>
-    <div><span id="createStaminaText"></span></div>
-    <div class="staminaBar" id="createStaminaBar"></div>
-    <p id="nextCreateRecoveryText"></p>
+    <div class="staminaRow">
 
-    <!-- バトルスタミナ -->
-    <h4>バトルスタミナ</h4>
-    <div><span id="battleStaminaText"></span></div>
-    <div class="staminaBar" id="battleStaminaBar"></div>
-    <p id="nextBattleRecoveryText"></p>
+      <!-- 入学スタミナ -->
+      <div class="staminaBox">
+        <h4>生徒入学スタミナ</h4>
+        <div><span id="createStaminaText"></span></div>
+        <div class="staminaBar" id="createStaminaBar"></div>
+        <p id="nextCreateRecoveryText"></p>
+      </div>
+
+      <!-- バトルスタミナ -->
+      <div class="staminaBox">
+        <h4>バトルスタミナ</h4>
+        <div><span id="battleStaminaText"></span></div>
+        <div class="staminaBar" id="battleStaminaBar"></div>
+        <p id="nextBattleRecoveryText"></p>
+      </div>
+
+    </div>
   </div>
 
   <button id="reloadBtn">リロード</button><br>
