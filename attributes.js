@@ -25,6 +25,7 @@ const MAGIC_ATTRIBUTE_CHAMPION = {
 
 // 属性最大威力
 const MAGIC_ATTRIBUTE_MAXDAMAGE = {
+  0: "魔導王", // 全属性
   1: "炎壊王", // 火
   2: "水壊王", // 水
   3: "風壊王", // 風
