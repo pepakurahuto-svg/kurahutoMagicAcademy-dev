@@ -141,7 +141,7 @@
     </div>
     <!-- 🔥 プレイヤー経験値表示（新規追加） -->
     <div id="playerExpBox">
-      <h4>プレイヤー経験値</h4>
+      <h4>指導実績</h4>
       <div><span id="playerExpText"></span></div>
     </div>
   </div>
@@ -216,7 +216,7 @@
       document.getElementById("playerName").innerText = data.name + " さん";
 
       //経験値情報
-      document.getElementById("playerExpText").innerText = `${data.battleExp || 0}`;
+      document.getElementById("playerExpText").innerText = `${data.battleExp || 0}ポイント`;
 
       // スタミナ情報取得
       createStamina = data.create_stamina;
@@ -784,7 +784,7 @@
           battleExp: playerExp + charExp
         });
 
-        alert(`生徒が卒業しました。\n経験値 ${charExp} をプレイヤーに加算しました！`);
+        alert(`生徒が卒業しました。\n生徒の経験値 ${charExp} をプレイヤーの指導実績に加算しました！`);
       } else {
         alert("生徒が卒業しました");
       }

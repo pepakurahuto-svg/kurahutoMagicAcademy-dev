@@ -20,6 +20,21 @@
   <p>経験値：360</p>
   <p>残り経験値：<span id="expRemain">360</span></p>
 
+  <p>基礎魔力量を 1 上げるために必要な経験値は36です：</p>
+  <p>レベルを 1 上げるために必要な経験値は10です：</p>
+  <p>発動抵抗を 1 下げるために必要な経験値は以下のとおりです：</p>
+  <ul>
+    <li>10 → 9：50</li>
+    <li>9 → 8：75</li>
+    <li>8 → 7：100</li>
+    <li>7 → 6：150</li>
+    <li>6 → 5：200</li>
+    <li>5 → 4：300</li>
+    <li>4 → 3：400</li>
+    <li>3 → 2：600</li>
+    <li>2 → 1：800</li>
+  </ul>
+
   <h2>基礎魔力量</h2>
   <p>
     基礎魔力量：<span id="baseDice">4</span>
@@ -166,21 +181,57 @@
           updateUI();
         }
       };
+      // critical -1（段階的にコスト増加）
+      document.getElementById(`criticalMinus${i}`).onclick = () => {
+        const c = events[i].critical;
 
-      // critical +1（初期値より増やせない）
-      document.getElementById(`criticalPlus${i}`).onclick = () => {
-        if (events[i].critical < 10) {
-          events[i].critical++;
-          exp += 50;
+        // 段階的コスト
+        const costTable = {
+          10: 50,
+          9: 75,
+          8: 100,
+          7: 150,
+          6: 200,
+          5: 300,
+          4: 400,
+          3: 600,
+          2: 800,
+          1: 1000
+        };
+
+        const cost = costTable[c];
+
+        if (c > 0 && exp >= cost) {
+          events[i].critical--;
+          exp -= cost;
           updateUI();
         }
       };
 
-      // critical -1
-      document.getElementById(`criticalMinus${i}`).onclick = () => {
-        if (events[i].critical > 0 && exp >= 50) {
-          events[i].critical--;
-          exp -= 50;
+      // critical +1（段階的に返却経験値）
+      document.getElementById(`criticalPlus${i}`).onclick = () => {
+        const c = events[i].critical;
+
+        // 返却経験値テーブル（期待値ベース）
+        const refundTable = {
+          9: 50,
+          8: 50,
+          7: 75,
+          6: 100,
+          5: 150,
+          4: 200,
+          3: 300,
+          2: 400,
+          1: 600,
+          0: 800 // 0→1 は本来禁止推奨だが一応記述
+        };
+
+        const refund = refundTable[c];
+
+        // 初期値より増やせない（critical は 10 が上限）
+        if (c < 10) {
+          events[i].critical++;
+          exp += refund;
           updateUI();
         }
       };
