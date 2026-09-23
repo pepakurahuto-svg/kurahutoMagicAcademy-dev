@@ -316,6 +316,7 @@
               </li>
             `).join("")}
           </ul>
+          <p>最大総合威力：${ch.maxTotalAchieve}</p>
           <p>入学日時：${createdAtLocal}</p>
           <p>入学Ver：${ch.createdVersion}</p>
         `;
@@ -545,7 +546,7 @@
               生徒名：${champChar.name}<br>
               担当教授：${creatorDisplay}<br>
               連勝数：${data.winStreak}<br>
-              最大威力：${champChar.maxTotalAchieve}<br>
+              最大総合威力：${champChar.maxTotalAchieve}<br>
               基礎魔力量：${champChar.baseDice}<br>
           `;
 
@@ -609,10 +610,10 @@
           //基本情報
           maxHtml = `
             <p>
-              <strong>${MAGIC_ATTRIBUTE_MAXDAMAGE[0]}(最大威力)</strong><br>
+              <strong>${MAGIC_ATTRIBUTE_MAXDAMAGE[0]}(最大総合威力)</strong><br>
               生徒名：${maxChar.name}<br>
               担当教授：${creatorDisplay}<br>
-              最大威力：${data.maxAchieve}<br>
+              最大総合威力：${data.maxAchieve}<br>
               基礎魔力量：${maxChar.baseDice}<br>
           `;
 
