@@ -245,7 +245,7 @@
       const maxStamina = 10;
       let stamina = data.battle_stamina;
 
-      let lastRecovery = data.battle_last_recovery.toDate();
+      let lastRecovery = data.last_battle_recovery.toDate();
       const now = new Date();
 
       // ▼ 回復処理（複数回復にも対応）
@@ -260,7 +260,7 @@
       if (stamina !== data.battle_stamina) {
         await playerRef.update({
           battle_stamina: stamina,
-          battle_last_recovery: lastRecovery
+          last_battle_recovery: lastRecovery
         });
       }
 
@@ -294,8 +294,8 @@
       // ▼ Firestoreへ書き戻し（最終バトル時刻も記録）
       await playerRef.update({
         battle_stamina: newStamina,
-        battle_last_recovery: newLastRecovery,
-        battle_last_battle: now
+        last_battle_recovery: newLastRecovery,
+        last_battle_battle: now
       });
 
       return true;
