@@ -102,8 +102,8 @@
     let enemyChar = null;
     let enemyAttrId = null;
     let battleAttrId = null; //0923battleと違うところ
-    let mywins = 0; //0923battleと違うところ
-    let enemywins = 0; //0923battleと違うところ
+    let myWins = 0; //0923battleと違うところ
+    let enemyWins = 0; //0923battleと違うところ
     let drows = 0; //0923battleと違うところ
     let myTotalAchieve = 0;
     let enemyTotalAchieve = 0;
@@ -444,11 +444,11 @@
       if (myAchieve > enemyAchieve) {
         winner = `${myChar.name}（自分）`;
         color = "red";
-        mywins++;
+        myWins++;
       } else if (myAchieve < enemyAchieve) {
         winner = `${enemyChar.name}（相手）`;
         color = "blue";
-        enemywins++;
+        enemyWins++;
       } else {
         winner = "引き分け";
         color = "black";
@@ -457,13 +457,13 @@
 
       const log = document.getElementById("battleLog");
       log.innerHTML += `<h3 style="color:${color}">勝者：${winner}</h3>`;
-      log.innerHTML += `<p>現在の勝ち数：自分${mywins}勝・相手${enemywins}勝・引き分け${drows}回</p>`;
+      log.innerHTML += `<p>現在の勝ち数：自分${myWins}勝・相手${enemyWins}勝・引き分け${drows}回</p>`;
       log.innerHTML += `<p>現在の合計威力：自分${myTotalAchieve}・相手${enemyTotalAchieve}</p>`;
       
       const blog = document.getElementById("battleWinLog");
       blog.innerHTML = ``;
-      blog.innerHTML += `<p>現在の勝ち数：自分${mywins}勝・相手${enemywins}勝・引き分け${drows}回</p>`;
-      blog.innerHTML += `<p>現在の合計威力：自分${myTotalAchieve}・相手${enemyTotalAchieve}</p>`;
+      blog.innerHTML += `<strong>現在の勝ち数：自分${myWins}勝・相手${enemyWins}勝・引き分け${drows}回</strong><br>`;
+      blog.innerHTML += `<strong>現在の合計威力：自分${myTotalAchieve}・相手${enemyTotalAchieve}</strong><br>`;
     }
 
     // -------------------------
