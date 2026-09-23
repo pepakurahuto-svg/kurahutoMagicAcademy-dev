@@ -510,8 +510,8 @@
       // --- 最終処理 ---
       if (String(battleAttrId) == "4") {          
         //勝敗、勝ったらtrue、負けたらfalse
-        const myWinFlag = false;
-        const enemyWinFlag = false;
+        let myWinFlag = false;
+        let enemyWinFlag = false;
         // --- 勝敗処理（勝敗数→達成値合計で判定） ---
         if (myWins > enemyWins || 
         (myWins === enemyWins && myTotalAchieve > enemyTotalAchieve)) {

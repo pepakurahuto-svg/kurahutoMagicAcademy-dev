@@ -472,8 +472,8 @@
       }
 
       //勝敗、勝ったらtrue、負けたらfalse
-      const myWinFlag = false;
-      const enemyWinFlag = false;
+      let myWinFlag = false;
+      let enemyWinFlag = false;
       // --- 勝敗処理（達成値で判定） ---
       if (myAchieve > enemyAchieve) {
         await champRef.set({
