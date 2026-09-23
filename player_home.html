@@ -554,27 +554,13 @@
               生徒名：${champChar.name}<br>
               担当教授：${creatorDisplay}<br>
               連勝数：${data.winStreak}<br>
-              最大威力：${data.maxAchieve}
-            </p>
+              最大威力：${data.maxAchieve}<br>
+              基礎魔力量：${champChar.baseDice}<br>
           `;
-          // まとめて表示
-          const div = document.createElement("div");
-          div.className = "champCard";
-
-          // ★ 属性カラーを適用
-          div.style.setProperty("--attr-color", MAGIC_ATTRIBUTE_COLORS[0]);
-
-          div.innerHTML = `
-            <h3>全属性</h3>
-            ${champHtml}
-          `;
-          area.appendChild(div);
 
           //各属性情報
           for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
             const attrName = MAGIC_ATTRIBUTES[attrId];
-            champHtml = "";
-            champChar = null;
             // ★ 属性ごとの critical を取得
             const critical = champChar.events && champChar.events[attrId]
               ? champChar.events[attrId].critical
@@ -590,27 +576,12 @@
               ? champChar.events[attrId].maxAchieve
               : "不明";
 
-            champHtml = `
-              <p>
-                基礎魔力量：${champChar.baseDice}<br>
+            champHtml += `
+                <strong>${MAGIC_ATTRIBUTES[attrId]}属性</strong><br>
                 レベル：${dice}<br>
                 発動抵抗：${critical}<br>
-                最大威力：${maxAchieve}
-              </p>
+                最大威力：${maxAchieve}<br>
             `;
-
-            // まとめて表示
-            const div = document.createElement("div");
-            div.className = "champCard";
-
-            // ★ 属性カラーを適用
-            div.style.setProperty("--attr-color", MAGIC_ATTRIBUTE_COLORS[attrId]);
-
-            div.innerHTML = `
-              <h3>属性：${attrName}</h3>
-              ${champHtml}
-            `;
-            area.appendChild(div);
           }
         }else {
           champHtml = `<p>勝ち抜き最優秀生徒：生徒情報が見つかりません</p>`;
@@ -618,6 +589,88 @@
       } else {
         champHtml = `<p>勝ち抜き最優秀生徒：未設定</p>`;
       }
+
+      // まとめて表示
+      const div = document.createElement("div");
+      div.className = "champCard";
+
+      // ★ 属性カラーを適用
+      div.style.setProperty("--attr-color", MAGIC_ATTRIBUTE_COLORS[0]);
+
+      div.innerHTML = `
+        <h3>全属性</h3>
+        ${champHtml}
+        ${maxHtml}
+      `;
+      area.appendChild(div);
+
+      // 最大魔法威力チャンピオン
+      const maxSnap = await db.collection("maxAchieveChampions").doc("0").get();
+      let maxHtml = "";
+      let maxChar = null;
+
+      if (maxSnap.exists) {
+        const data = maxSnap.data();
+        const maxChar = await loadCharacterInfo(data.championId);
+        if (maxChar) {
+          const creatorName = await loadPlayerName(maxChar.playerId);
+          const creatorDisplay = highlightCreator(creatorName, maxChar.playerId);
+
+          //基本情報
+          maxHtml = `
+            <p>
+              <strong>${MAGIC_ATTRIBUTE_MAXDAMAGE[0]}(最大威力)</strong><br>
+              生徒名：${maxChar.name}<br>
+              担当教授：${creatorDisplay}<br>
+              連勝数：${data.winStreak}<br>
+              最大威力：${data.maxAchieve}<br>
+              基礎魔力量：${maxChar.baseDice}<br>
+          `;
+
+          //各属性情報
+          for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
+            const attrName = MAGIC_ATTRIBUTES[attrId];
+            // ★ 属性ごとの critical を取得
+            const critical = maxChar.events && maxChar.events[attrId]
+              ? maxChar.events[attrId].critical
+              : "不明";
+
+            // ★ 属性ごとの dice を取得
+            const dice = maxChar.events && maxChar.events[attrId]
+              ? maxChar.events[attrId].dice
+              : "不明";
+              
+            // ★ 属性ごとの maxAchieve を取得
+            const maxAchieve = maxChar.events && maxChar.events[attrId]
+              ? maxChar.events[attrId].maxAchieve
+              : "不明";
+
+            maxHtml += `
+                <strong>${MAGIC_ATTRIBUTES[attrId]}属性</strong><br>
+                レベル：${dice}<br>
+                発動抵抗：${critical}<br>
+                最大威力：${maxAchieve}<br>
+            `;
+          }
+        } else {
+          maxHtml = `<p>最大威力最優秀生徒：生徒情報が見つかりません</p>`;
+        }
+      } else {
+        maxHtml = `<p>最大威力最優秀生徒：未設定</p>`;
+      }
+
+      // まとめて表示
+      const divmax = document.createElement("div");
+      divmax.className = "champCard";
+
+      // ★ 属性カラーを適用
+      divmax.style.setProperty("--attr-color", MAGIC_ATTRIBUTE_COLORS[0]);
+
+      divmax.innerHTML = `
+        <h3>全属性</h3>
+        ${maxHtml}
+      `;
+      area.appendChild(divmax);
     }
     // -------------------------
     // 属性チャンピオン選択肢をバトル相手コンボボックスに追加
