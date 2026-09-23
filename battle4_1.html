@@ -104,6 +104,8 @@
     let mywins = 0; //0923battleと違うところ
     let enemywins = 0; //0923battleと違うところ
     let drows = 0; //0923battleと違うところ
+    let myTotalAchieve = 0;
+    let enemyTotalAchieve = 0;
 
     let myRolls = [];
     let enemyRolls = [];
@@ -350,7 +352,11 @@
       enemyCriticalTargets = enFirst.filter(v => v >= enCrit);
 
       const log = document.getElementById("battleLog");
-      log.innerHTML = "";
+      // battleAttrId が 1 ならログの初期化
+      if (String(battleAttrId) == "1") {
+        log.innerHTML = "";
+      }
+      log.innerHTML += `<p>${MAGIC_ATTRIBUTE[battleAttrId]}属性の勝負</p>`;
       log.innerHTML += `<p>${renderRollResult("自分 1回目ダイス結果", myFirst, myCrit)}</p>`;
       log.innerHTML += `<p>${renderRollResult("相手 1回目ダイス結果", enFirst, enCrit)}</p>`;
 
@@ -407,6 +413,9 @@
         myAchieve = 10 * (myX - 1) + myMax;
         enemyAchieve = 10 * (enX - 1) + enMax;
 
+        myTotalAchieve+=myAchieve;
+        enemyTotalAchieve+=enemyAchieve;
+
         const log = document.getElementById("battleLog");
         log.innerHTML += `<p>自分 魔法威力：${myAchieve}</p>`;
         log.innerHTML += `<p>相手 魔法威力：${enemyAchieve}</p>`;
@@ -447,6 +456,8 @@
 
       const log = document.getElementById("battleLog");
       log.innerHTML += `<h3 style="color:${color}">勝者：${winner}</h3>`;
+      log.innerHTML += `<p>現在の勝ち数：自分${mywins}勝・相手${enemywins}勝・引き分け${drows}回</p>`;
+      log.innerHTML += `<p>現在の合計威力：自分${myTotalAchieve}・相手${enemyTotalAchieve}</p>`;
     }
 
     // -------------------------
