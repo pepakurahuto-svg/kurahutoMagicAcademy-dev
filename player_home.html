@@ -356,15 +356,21 @@
     // バトル開始
     // -------------------------
     document.getElementById("battleBtn").onclick = () => {
-      const selected = document.querySelector('input[name="charSelect"]:checked');
-      if (!selected) {
+      const selectedList = document.querySelectorAll('input[name="charSelect"]:checked');
+
+      if (selectedList.length === 0) {
         alert("自分の生徒を選択してください");
+        return;
+      }
+
+      if (selectedList.length > 1) {
+        alert("対戦する生徒は同時に1体のみ選択可能です。1体だけ選択してください。");
         return;
       }
 
       const enemyAttrId = document.getElementById("enemySelect").value;
 
-      sessionStorage.setItem("selectedCharId", selected.value);
+      sessionStorage.setItem("selectedCharId", selectedList[0].value);
       sessionStorage.setItem("enemyAttrId", enemyAttrId); // ★追加：対戦相手の属性ID
       if (String(enemyAttrId) == "0") {
         location.href = "battle4_1.html";
