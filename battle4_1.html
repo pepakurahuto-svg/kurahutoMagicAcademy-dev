@@ -79,6 +79,7 @@
   <button id="rerollBtn" disabled>再ロール</button>
 
   <h3>バトルログ</h3>
+  <div id="battleWinLog"></div>
   <div id="battleLog"></div>
 
   <button onclick="location.href='player_home.html'">プレイヤーホームへ戻る</button>
@@ -458,6 +459,11 @@
       log.innerHTML += `<h3 style="color:${color}">勝者：${winner}</h3>`;
       log.innerHTML += `<p>現在の勝ち数：自分${mywins}勝・相手${enemywins}勝・引き分け${drows}回</p>`;
       log.innerHTML += `<p>現在の合計威力：自分${myTotalAchieve}・相手${enemyTotalAchieve}</p>`;
+      
+      const blog = document.getElementById("battleWinLog");
+      blog.innerHTML = ``;
+      blog.innerHTML += `<p>現在の勝ち数：自分${mywins}勝・相手${enemywins}勝・引き分け${drows}回</p>`;
+      blog.innerHTML += `<p>現在の合計威力：自分${myTotalAchieve}・相手${enemyTotalAchieve}</p>`;
     }
 
     // -------------------------
