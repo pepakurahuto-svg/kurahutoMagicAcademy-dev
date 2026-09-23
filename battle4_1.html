@@ -125,7 +125,7 @@
       const myId = sessionStorage.getItem("selectedCharId");
       enemyAttrId = 0; //0923battleと違うところ
 
-      if (!myId || !enemyAttrId) {
+      if (!myId || enemyAttrId === null || enemyAttrId === undefined) {
         alert("生徒または対戦属性が選択されていません");
         location.href = "player_home.html";
         return;
