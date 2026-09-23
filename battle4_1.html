@@ -320,13 +320,11 @@
     // 1回目ロール
     // -------------------------
     document.getElementById("rollBtn").onclick = async () => {
-      // battleAttrId が 1 以外ならスタミナ処理しない
-      if (String(battleAttrId) !== "1") {
-        return;
+      // battleAttrId が 1 ならスタミナ処理
+      if (String(battleAttrId) == "1") {
+        const ok = await consumeBattleStamina(playerRef);
+        if (!ok) return;  // スタミナ不足なら処理中断
       }
-      const ok = await consumeBattleStamina(playerRef);
-      if (!ok) return;  // スタミナ不足なら処理中断
-
       const eventNo = String(battleAttrId);
 
       myRolls = [];
