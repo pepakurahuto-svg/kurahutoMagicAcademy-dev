@@ -435,7 +435,7 @@
     }
 
     // -------------------------
-    // 戦闘結果の Firestore 更新（達成値ベース）
+    // 戦闘結果の Firestore 更新（達成値ベース） + 経験値も更新
     // -------------------------
     async function updateBattleResult() {
       const attrId = String(enemyAttrId);
@@ -471,6 +471,9 @@
         log.innerHTML += `<p style="color:blue">相手の最大威力が更新されました！（${enemyCurrentMax} → ${enemyAchieve}）</p>`;
       }
 
+      //勝敗、勝ったらtrue、負けたらfalse
+      const myWinFlag = false;
+      const enemyWinFlag = false;
       // --- 勝敗処理（達成値で判定） ---
       if (myAchieve > enemyAchieve) {
         await champRef.set({
@@ -479,11 +482,42 @@
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         log.innerHTML += `<p style="color:red">あなたが新しい ${MAGIC_ATTRIBUTE_CHAMPION[attrId]} になりました！</p>`;
+        myWinFlag = true;
       } else {
         const currentStreak = champData.winStreak || 0;
         await champRef.update({
           winStreak: currentStreak + 1,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        enemyWinFlag = true;
+      }
+      //経験値処理
+      //自分
+      let gainedExp = calcBattleExp(
+        false,        // 全属性か？
+        true,         // 挑戦者か？
+        myWinFlag     // 勝ったか？
+      );
+      
+      // gainedExp が 0 のときは Firestore 更新しない
+      if (gainedExp > 0) {
+        await myRef.update({
+          battleExp: (myChar.battleExp || 0) + gainedExp
+        });
+
+        log.innerHTML += `<p style="color:purple">経験値 +${gainedExp} を獲得しました！</p>`;
+      }
+      //相手防衛
+      gainedExp = calcBattleExp(
+        false,          // 全属性か？
+        false,          // 挑戦者か？
+        enemyWinFlag    // 勝ったか？
+      );
+      
+      // gainedExp が 0 のときは Firestore 更新しない
+      if (gainedExp > 0) {
+        await enemyRef.update({
+          battleExp: (enemyChar.battleExp || 0) + gainedExp
         });
       }
 
@@ -505,6 +539,32 @@
         }else{
           log.innerHTML += `<p style="color:blue">相手が新しい ${MAGIC_ATTRIBUTE_MAXDAMAGE[attrId]} になりました！</p>`;
         }
+      }
+    }
+
+    // -------------------------
+    // 経験値計算
+    // battleExp を計算する関数
+    // @param {boolean} isAllChampion - 相手が全属性チャンピオン（魔導覇者）かどうか
+    // @param {boolean} isChallenger - 自分が挑戦者かどうか（true＝挑戦者、false＝チャンピオン側）
+    // @param {boolean} isWin - 自分が勝ったかどうか
+    // @returns {number} gainedExp - 獲得経験値
+    // -------------------------
+    function calcBattleExp(isAllChampion, isChallenger, isWin) {
+      // 全属性チャンピオン（魔導覇者）
+      if (isAllChampion) {
+        if (isChallenger) {
+          return isWin ? 3 : 1;   // 挑戦：勝ち3 / 負け1
+        } else {
+          return isWin ? 1 : 0;   // 防衛：勝ち1 / 負け0
+        }
+      }
+
+      // 属性チャンピオン（火・水・風・土）
+      if (isChallenger) {
+        return isWin ? 2 : 1;     // 挑戦：勝ち2 / 負け1
+      } else {
+        return isWin ? 1 : 0;     // 防衛：勝ち1 / 負け0
       }
     }
 
