@@ -94,6 +94,12 @@
       padding: 10px;
       white-space: nowrap;
     }
+
+    #playerExpBox {
+      margin-top: 10px;
+      padding: 5px;
+      border-top: 1px solid #ccc;
+    }
   </style>
 </head>
 <body>
@@ -132,6 +138,11 @@
         <div class="staminaBar" id="battleStaminaBar"></div>
         <p id="nextBattleRecoveryText"></p>
       </div>
+    </div>
+    <!-- 🔥 プレイヤー経験値表示（新規追加） -->
+    <div id="playerExpBox">
+      <h4>プレイヤー経験値</h4>
+      <div><span id="playerExpText"></span></div>
     </div>
   </div>
 
@@ -203,6 +214,9 @@
 
       const data = playerDoc.data();
       document.getElementById("playerName").innerText = data.name + " さん";
+
+      //経験値情報
+      document.getElementById("playerExpText").innerText = `${data.battleExp || 0}`;
 
       // スタミナ情報取得
       createStamina = data.create_stamina;
