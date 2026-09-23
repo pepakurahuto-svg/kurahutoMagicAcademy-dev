@@ -355,8 +355,11 @@
 
       sessionStorage.setItem("selectedCharId", selected.value);
       sessionStorage.setItem("enemyAttrId", enemyAttrId); // ★追加：対戦相手の属性ID
-
-      location.href = "battle.html";
+      if (String(enemyAttrId) == "0") {
+        location.href = "battle4_1.html";
+      } else {
+        location.href = "battle.html";
+      }
     };
 
     // -------------------------
