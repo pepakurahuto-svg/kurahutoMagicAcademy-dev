@@ -64,6 +64,8 @@ await db.collection("players").doc(uid).set({
   // 🔹 スタミナ初期値
   create_stamina: 10,
   battle_stamina: 10,
+  // バトル経験値
+  battleExp: 0,
 
   // 🔹 最終回復時刻（現在時刻で初期化）
   last_create_recovery: firebase.firestore.FieldValue.serverTimestamp(),

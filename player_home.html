@@ -299,7 +299,7 @@
     }
 
     // -------------------------
-    // ページ描画（カードUI版）
+    // キャラクター表示
     // -------------------------
     function renderPage() {
       const start = (currentPage - 1) * pageSize;
@@ -327,6 +327,7 @@
             `).join("")}
           </ul>
           <p>最大総合威力：${ch.maxTotalAchieve}</p>
+          <p>バトル経験値：${ch.battleExp}</p>
           <p>入学日時：${createdAtLocal}</p>
           <p>入学Ver：${ch.createdVersion}</p>
         `;
@@ -741,8 +742,36 @@
       const ok = confirm("生徒を卒業（削除）させてもよろしいですか？");
       if (!ok) return;
 
-      await db.collection("characters").doc(String(charId)).delete();//Stringで渡さないとエラー
-      alert("生徒が卒業しました");
+      // --- キャラデータ取得（削除前に必ず取る） ---
+      const charSnap = await db.collection("characters").doc(String(charId)).get();
+      if (!charSnap.exists) {
+        alert("キャラデータが見つかりません");
+        return;
+      }
+
+      const charData = charSnap.data();
+      const charExp = charData.battleExp || 0;
+
+      // --- プレイヤーデータ取得 ---
+      const playerId = auth.currentUser.uid;
+      const playerRef = db.collection("players").doc(playerId);
+      const playerSnap = await playerRef.get();
+      const playerData = playerSnap.data() || {};
+      const playerExp = playerData.battleExp || 0;
+
+      // --- キャラ削除 ---
+      await db.collection("characters").doc(String(charId)).delete();
+
+      // --- キャラの経験値が 0 でなければ加算する ---
+      if (charExp > 0) {
+        await playerRef.update({
+          battleExp: playerExp + charExp
+        });
+
+        alert(`生徒が卒業しました。\n経験値 ${charExp} をプレイヤーに加算しました！`);
+      } else {
+        alert("生徒が卒業しました");
+      }
       location.reload();
     };
 
