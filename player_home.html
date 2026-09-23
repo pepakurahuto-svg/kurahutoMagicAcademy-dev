@@ -154,8 +154,6 @@
   <button onclick="location.href='character_create.html'">生徒入学（作成）</button><br>
   <!-- ★ バトル説明文 -->
   <p id="battleDescription">
-    バトルを開始するには、まず自分の生徒を選択し、<br>
-    対戦したい相手を選んでください。<br>
   </p>
   <!-- ★ 対戦相手選択コンボボックス -->
   <label for="enemySelect">対戦相手：</label>
@@ -744,6 +742,15 @@
 
     // ページ読み込み時に実行
     window.onload = () => {
+      const madouName = MAGIC_ATTRIBUTE_CHAMPION[0];
+      const description = `
+        バトルを開始するには、まず自分の生徒を選択し、<br>
+        対戦したい相手を選んでください。<br><br>
+        ${madouName} が対戦相手の場合は4つの属性全てで対戦を行います。<br>
+        それ以外の場合は指定の属性のみで対戦を行います。
+      `;
+      battleDescription.innerHTML = description;
+
       loadallChampions();
       loadChampions();
     };
