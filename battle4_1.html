@@ -523,7 +523,23 @@
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
         }
-        
+        // --- 自分の最大威力更新（全属性） ---
+        const myCurrentMax = myChar.maxTotalAchieve || 0;
+        if (myTotalAchieve > myCurrentMax) {
+          await myRef.update({
+            [`maxTotalAchieve`]: myTotalAchieve
+          });
+          log.innerHTML += `<p style="color:red">自分の最大威力が更新されました！（${myCurrentMax} → ${myTotalAchieve}）</p>`;
+        }
+
+        // --- 相手の最大威力更新（全属性） ---
+        const enemyCurrentMax = enemyChar.maxTotalAchieve || 0;
+        if (enemyTotalAchieve > enemyCurrentMax) {
+          await enemyRef.update({
+            [`maxTotalAchieve`]: enemyTotalAchieve
+          });
+          log.innerHTML += `<p style="color:blue">相手の最大威力が更新されました！（${enemyCurrentMax} → ${enemyTotalAchieve}）</p>`;
+        }
         // --- 最大威力チャンピオン更新 ---
         const winnerAchieve = Math.max(myTotalAchieve, enemyTotalAchieve);
         const winnerId = (myTotalAchieve > enemyTotalAchieve)

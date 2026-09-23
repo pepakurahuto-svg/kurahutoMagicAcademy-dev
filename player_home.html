@@ -34,14 +34,6 @@
       white-space: nowrap;
     }
 
-    #allchampionsArea {
-      display: flex;
-      overflow-x: auto;   /* 横スクロール維持 */
-      gap: 16px;          /* カード間の余白を少し広げる */
-      padding: 10px;      /* 内側に余白 */
-      white-space: nowrap;
-    }
-
     .champCard {
       flex: 0 0 auto;     /* 横スクロール用 */
       width: 300px;       /* 情報量に合わせて少し広げる */
@@ -128,7 +120,6 @@
   <!-- チャンピオン表示 -->
   <h2>最優秀生徒一覧</h2>
   <div id="championsArea"></div>
-  <div id="allchampionsArea"></div>
 
   <h2>あなたの生徒一覧</h2>
   <div id="charactersArea"></div>
@@ -510,7 +501,7 @@
     // 全属性チャンピオン表示
     // -------------------------
     async function loadallChampions() {
-      const area = document.getElementById("allchampionsArea");
+      const area = document.getElementById("championsArea");
 
       // ★ キャラ情報を取得
       async function loadCharacterInfo(charId) {
@@ -554,7 +545,7 @@
               生徒名：${champChar.name}<br>
               担当教授：${creatorDisplay}<br>
               連勝数：${data.winStreak}<br>
-              最大威力：${data.maxAchieve}<br>
+              最大威力：${champChar.maxTotalAchieve}<br>
               基礎魔力量：${champChar.baseDice}<br>
           `;
 
@@ -621,7 +612,6 @@
               <strong>${MAGIC_ATTRIBUTE_MAXDAMAGE[0]}(最大威力)</strong><br>
               生徒名：${maxChar.name}<br>
               担当教授：${creatorDisplay}<br>
-              連勝数：${data.winStreak}<br>
               最大威力：${data.maxAchieve}<br>
               基礎魔力量：${maxChar.baseDice}<br>
           `;
@@ -737,8 +727,8 @@
 
     // ページ読み込み時に実行
     window.onload = () => {
-      loadChampions();
       loadallChampions();
+      loadChampions();
     };
 
     //リロード
