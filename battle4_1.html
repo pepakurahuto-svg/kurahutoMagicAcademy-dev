@@ -507,7 +507,9 @@
       // --- 最終処理 ---
       if (String(battleAttrId) == "4") {          
         // --- 勝敗処理（勝敗数→達成値合計で判定） ---
-        if (myAchieve > enemyAchieve) {
+        if (myWins > enemyWins || 
+        (myWins === enemyWins && myTotalAchieve > enemyTotalAchieve)) {
+          // 自分の勝ち
           await champRef.set({
             championId: myChar.characterId,
             winStreak: 1,
@@ -523,8 +525,8 @@
         }
         
         // --- 最大威力チャンピオン更新 ---
-        const winnerAchieve = Math.max(myAchieve, enemyAchieve);
-        const winnerId = (myAchieve > enemyAchieve)
+        const winnerAchieve = Math.max(myTotalAchieve, enemyTotalAchieve);
+        const winnerId = (myTotalAchieve > enemyTotalAchieve)
           ? myChar.characterId
           : enemyChar.characterId;
 
@@ -535,7 +537,7 @@
             maxAchieve: winnerAchieve,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
           });
-          if (myAchieve > enemyAchieve) {
+          if (myTotalAchieve > enemyTotalAchieve) {
             log.innerHTML += `<p style="color:red">あなたが新しい ${MAGIC_ATTRIBUTE_MAXDAMAGE[attrId]} になりました！</p>`;
           }else{
             log.innerHTML += `<p style="color:blue">相手が新しい ${MAGIC_ATTRIBUTE_MAXDAMAGE[attrId]} になりました！</p>`;
