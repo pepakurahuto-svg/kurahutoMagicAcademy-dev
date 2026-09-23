@@ -123,6 +123,13 @@
         return;
       }
 
+      // 自分自身との戦闘禁止
+      if (String(myId) === String(enemyChar.characterId)) {
+        alert("自分自身とは対戦できません");
+        location.href = "player_home.html";
+        return;
+      }
+
       //自分のプレイヤーデータセット
       playerRef = db.collection("players").doc(user.uid);
 
