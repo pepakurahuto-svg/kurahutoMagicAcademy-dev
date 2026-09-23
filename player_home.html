@@ -537,7 +537,7 @@
         return name;
       }
       // 勝ち抜きチャンピオン
-      const champSnap = await db.collection("champions").doc(0).get();
+      const champSnap = await db.collection("champions").doc("0").get();
       let champHtml = "";
       let champChar = null;
       if (champSnap.exists) {
