@@ -313,21 +313,56 @@
     // UI更新
     // -------------------------
     function updateUI() {
-      document.getElementById("maxExp").innerText = totalExpLimit;
-      document.getElementById("oldUsedExp").innerText = oldUsedExp;
-      document.getElementById("characterExp").innerText = characterExp;
-      document.getElementById("usedExp").innerText = usedExp;
-      document.getElementById("expRemain").innerText = expRemain;
+        document.getElementById("maxExp").innerText = totalExpLimit;
+        document.getElementById("oldUsedExp").innerText = oldUsedExp;
+        document.getElementById("characterExp").innerText = characterExp;
+        document.getElementById("usedExp").innerText = usedExp;
+        document.getElementById("expRemain").innerText = expRemain;
 
-      document.getElementById("baseDiceOriginal").innerText = originalBaseDice;
-      document.getElementById("baseDice").innerText = baseDice;
+        document.getElementById("baseDiceOriginal").innerText = originalBaseDice;
+        document.getElementById("baseDice").innerText = baseDice;
 
-      for (let i = 1; i <= 4; i++) {
-        document.getElementById(`diceOriginal${i}`).innerText = originalEvents[i].dice;
-        document.getElementById(`dice${i}`).innerText = events[i].dice;
-        document.getElementById(`criticalOriginal${i}`).innerText = originalEvents[i].critical;
-        document.getElementById(`critical${i}`).innerText = events[i].critical;
-      }
+        for (let i = 1; i <= 4; i++) {
+            document.getElementById(`diceOriginal${i}`).innerText = originalEvents[i].dice;
+            document.getElementById(`dice${i}`).innerText = events[i].dice;
+            document.getElementById(`criticalOriginal${i}`).innerText = originalEvents[i].critical;
+            document.getElementById(`critical${i}`).innerText = events[i].critical;
+        }
+
+        // --- ボタン制御 ---
+        const basePlusBtn = document.getElementById("baseDicePlus");
+        const baseMinusBtn = document.getElementById("baseDiceMinus");
+
+        // 強化前より弱くなるなら minus を disable
+        if (baseDice - 1 < originalBaseDice) {
+            baseMinusBtn.disabled = true;
+        } else {
+            baseMinusBtn.disabled = false;
+        }
+
+        // 経験値不足なら plus を disable
+        basePlusBtn.disabled = expRemain < 36;
+
+        // 属性のボタンも同様に制御
+        for (let i = 1; i <= 4; i++) {
+            const dicePlusBtn = document.getElementById(`dicePlus${i}`);
+            const diceMinusBtn = document.getElementById(`diceMinus${i}`);
+            const criticalPlusBtn = document.getElementById(`criticalPlus${i}`);
+            const criticalMinusBtn = document.getElementById(`criticalMinus${i}`);
+
+            // dice -1 が強化前より弱くなるなら disable
+            diceMinusBtn.disabled = (events[i].dice - 1 < originalEvents[i].dice);
+
+            // dice +1 は expRemain が足りなければ disable
+            dicePlusBtn.disabled = expRemain < 10;
+
+            // critical +1 が強化前より弱くなるなら disable
+            criticalPlusBtn.disabled = (events[i].critical + 1 > originalEvents[i].critical);
+
+            // critical -1 は expRemain が足りなければ disable
+            const cost = criticalCostTable[events[i].critical];
+            criticalMinusBtn.disabled = expRemain < cost;
+        }
     }
 
     // -------------------------
@@ -422,7 +457,7 @@
     };
 
     // -------------------------
-    // 強化確定（弱体化禁止チェック＋600上限チェック）
+    // 強化確定（弱体化禁止チェック）
     // -------------------------
     document.getElementById("confirmOk").onclick = async () => {
       // 1. 強化前より弱くなっていないかチェック
