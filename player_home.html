@@ -91,11 +91,8 @@
       padding: 10px;
       white-space: nowrap;
     }
-
-    #playerExpBox {
-      margin-top: 10px;
-      padding: 5px;
-      border-top: 1px solid #ccc;
+    .playerExpBox {
+      width: 48%; /* 横に2つ並べるための幅 */
     }
   </style>
 </head>
@@ -127,11 +124,11 @@
         <div class="staminaBar" id="battleStaminaBar"></div>
         <p id="nextBattleRecoveryText"></p>
       </div>
-    </div>
-    <!-- 🔥 プレイヤー経験値表示（新規追加） -->
-    <div id="playerExpBox">
-      <h4>指導実績</h4>
-      <div><span id="playerExpText"></span></div>
+      <!-- 🔥 プレイヤー経験値表示（新規追加） -->
+      <div class="playerExpBox">
+        <h4>指導実績</h4>
+        <div><span id="playerExpText"></span></div>
+      </div>
     </div>
   </div>
 
