@@ -6,7 +6,7 @@
     // @returns {number} stamina - 現在のスタミナ
     // @returns {timeStamp} lastRecovery - 最終回復時刻
     // -------------------------
-    async function getBattleStamina(playerRef) {
+    async function getStamina(playerRef) {
       const snap = await playerRef.get();
       const data = snap.data();
 
@@ -40,9 +40,9 @@
     // @returns {boolean} - true:スタミナ足りて消費済、false:スタミナ足らずalert
 
     // -------------------------
-    async function consumeBattleStamina(playerRef,mode) {
+    async function consumeStamina(playerRef,mode) {
       // ▼ まず回復計算を getBattleStamina に任せる
-      const { stamina: currentStamina, lastRecovery } = await getBattleStamina(playerRef);
+      const { stamina: currentStamina, lastRecovery } = await getStamina(playerRef);
 
       const now = new Date();
 

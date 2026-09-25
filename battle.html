@@ -252,7 +252,7 @@
     // 1回目ロール
     // -------------------------
     document.getElementById("rollBtn").onclick = async () => {
-      const ok = await consumeBattleStamina(playerRef,2);
+      const ok = await consumeStamina(playerRef,2);
       if (!ok) return;  // スタミナ不足なら処理中断
 
       const eventNo = String(enemyAttrId);

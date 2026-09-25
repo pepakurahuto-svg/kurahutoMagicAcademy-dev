@@ -285,7 +285,7 @@
         return;
       }
       // ★スタミナ消費
-      const ok = await consumeCreateStamina(playerRef,1);
+      const ok = await consumeStamina(playerRef,1);
       if (!ok) return;  // スタミナ不足ならキャラ作成を中断
 
       const playerId = auth.currentUser.uid;
