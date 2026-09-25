@@ -45,7 +45,7 @@
 </head>
 
 <body>
-  <h1>バトル</h1>
+  <h1>シナリオバトル</h1>
 
   <div class="flex">
     <div class="charBox">
@@ -61,9 +61,6 @@
 
   <h3>バトル説明</h3>
   <p>
-    プレイヤーホームで選択した自分の生徒と、<br>
-    対戦したい属性の覇者でバトルを行います。<br>
-    バトル属性は、プレイヤーホームで選択した属性で固定されます。<br>
     はじめにダイスロールを行ってください。<br>
     ダイスロールの結果で再ロールが行える場合、再ロールボタンが有効になります。<br>
     再ロールが出来る間は再ロールを行ってください。<br>
@@ -81,7 +78,7 @@
   <h3>バトルログ</h3>
   <div id="battleLog"></div>
 
-  <button onclick="location.href='player_home.html'">プレイヤーホームへ戻る</button>
+  <button id="scenarioBackBtn">シナリオへ戻る</button>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -90,7 +87,6 @@
   <script src="firebase-config.js"></script>
   <script src="attributes.js"></script>
   <script src="helpmodal/modal.js"></script>
-  <script src="stamina.js"></script>
 
   <script>
     firebase.initializeApp(firebaseConfig);
@@ -100,7 +96,6 @@
 
     let myChar = null;
     let enemyChar = null;
-    let enemyAttrId = null;
 
     let myRolls = [];
     let enemyRolls = [];
@@ -110,6 +105,15 @@
     let myAchieve = null;
     let enemyAchieve = null;
 
+    //勝敗、勝ったらtrue、負けたらfalse
+    let myWinFlag = false;
+    let enemyWinFlag = false;
+
+    const myId = sessionStorage.getItem("selectedCharId");
+    const enemyAttrId = sessionStorage.getItem("enemyAttrId");
+    const enemyId = sessionStorage.getItem("enemyId");
+    const scenarioId = sessionStorage.getItem("scenarioId");
+    const battleId = sessionStorage.getItem("battleId");
     // -------------------------
     // キャラ情報読み込み
     // -------------------------
@@ -119,11 +123,8 @@
         return;
       }
 
-      const myId = sessionStorage.getItem("selectedCharId");
-      enemyAttrId = sessionStorage.getItem("enemyAttrId");
-
-      if (!myId || !enemyAttrId) {
-        alert("生徒または対戦属性が選択されていません");
+      if (!myId || !enemyId || !enemyAttrId) {
+        alert("生徒または対戦相手または対戦属性が選択されていません");
         location.href = "player_home.html";
         return;
       }
@@ -140,19 +141,7 @@
       }
       myChar = mySnap.data();
 
-      // 属性チャンピオン情報
-      const champSnap = await db.collection("champions").doc(String(enemyAttrId)).get();
-      if (!champSnap.exists) {
-        alert("この属性の勝ち抜き最優秀生徒が存在しません");
-        location.href = "player_home.html";
-        return;
-      }
-      document.getElementById("enemyTitle").innerText =
-      `相手（${MAGIC_ATTRIBUTE_CHAMPION[String(enemyAttrId)]}）`;
-
-      const champData = champSnap.data();
-      const enemyId = String(champData.championId);
-      
+      // 対戦相手情報
       // 自分自身との戦闘禁止
       if (String(myId) === String(enemyId)) {
         alert("自分自身とは対戦できません");
@@ -160,14 +149,16 @@
         return;
       }
 
-      // チャンピオンのキャラ情報
+      // 相手のキャラ情報
       const enemySnap = await db.collection("characters").doc(enemyId).get();
       if (!enemySnap.exists) {
-        alert("勝ち抜き最優秀生徒の生徒情報が取得できませんでした");
+        alert("対戦相手の生徒情報が取得できませんでした");
         location.href = "player_home.html";
         return;
       }
       enemyChar = enemySnap.data();
+      document.getElementById("enemyTitle").innerText =
+      `相手（${enemyChar.name}）`;
 
       renderCharInfo();
     });
@@ -247,14 +238,10 @@
         v >= critical ? `<span class="red">${v}</span>` : v
       ).join(",");
     }
-
     // -------------------------
     // 1回目ロール
     // -------------------------
     document.getElementById("rollBtn").onclick = async () => {
-      const ok = await consumeBattleStamina(playerRef,2);
-      if (!ok) return;  // スタミナ不足なら処理中断
-
       const eventNo = String(enemyAttrId);
 
       myRolls = [];
@@ -372,21 +359,13 @@
     }
 
     // -------------------------
-    // 戦闘結果の Firestore 更新（達成値ベース） + 経験値も更新
+    // 戦闘結果の Firestore 更新（達成値ベース）+ 経験値処理
     // -------------------------
     async function updateBattleResult() {
       const attrId = String(enemyAttrId);
 
       const myRef = db.collection("characters").doc(String(myChar.characterId));
       const enemyRef = db.collection("characters").doc(String(enemyChar.characterId));
-      const champRef = db.collection("champions").doc(attrId);
-      const maxChampRef = db.collection("maxAchieveChampions").doc(attrId);
-
-      const champSnap = await champRef.get();
-      const maxChampSnap = await maxChampRef.get();
-
-      const champData = champSnap.exists ? champSnap.data() : { championId: 0, winStreak: 0 };
-      const maxChampData = maxChampSnap.exists ? maxChampSnap.data() : { championId: 0, maxAchieve: 0 };
 
       const log = document.getElementById("battleLog");
 
@@ -408,31 +387,17 @@
         log.innerHTML += `<p style="color:blue">相手の最大威力が更新されました！（${enemyCurrentMax} → ${enemyAchieve}）</p>`;
       }
 
-      //勝敗、勝ったらtrue、負けたらfalse
-      let myWinFlag = false;
-      let enemyWinFlag = false;
       // --- 勝敗処理（達成値で判定） ---
       if (myAchieve > enemyAchieve) {
-        await champRef.set({
-          championId: myChar.characterId,
-          winStreak: 1,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        log.innerHTML += `<p style="color:red">あなたが新しい ${MAGIC_ATTRIBUTE_CHAMPION[attrId]} になりました！</p>`;
         myWinFlag = true;
       } else {
-        const currentStreak = champData.winStreak || 0;
-        await champRef.update({
-          winStreak: currentStreak + 1,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
         enemyWinFlag = true;
       }
       //経験値処理
       //自分
-      let gainedExp = calcBattleExp(
-        false,        // 全属性か？
-        true,         // 挑戦者か？
+      let gainedExp = calcScenarioBattleExp(
+        scenarioId,   // シナリオID
+        battleId,     // シナリオ内バトル番号
         myWinFlag     // 勝ったか？
       );
       
@@ -444,69 +409,48 @@
 
         log.innerHTML += `<p style="color:purple">バトル経験値 +${gainedExp} を獲得しました！</p>`;
       }
-      //相手防衛
-      gainedExp = calcBattleExp(
-        false,          // 全属性か？
-        false,          // 挑戦者か？
-        enemyWinFlag    // 勝ったか？
-      );
-      
-      // gainedExp が 0 のときは Firestore 更新しない
-      if (gainedExp > 0) {
-        await enemyRef.update({
-          battleExp: (enemyChar.battleExp || 0) + gainedExp
-        });
-      }
-
-      // --- 最大威力チャンピオン更新 ---
-      const winnerAchieve = Math.max(myAchieve, enemyAchieve);
-      const winnerId = (myAchieve > enemyAchieve)
-        ? myChar.characterId
-        : enemyChar.characterId;
-
-      const currentMaxAchieve = maxChampData.maxAchieve || 0;
-      if (winnerAchieve > currentMaxAchieve) {
-        await maxChampRef.set({
-          championId: winnerId,
-          maxAchieve: winnerAchieve,
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        if (myAchieve > enemyAchieve) {
-          log.innerHTML += `<p style="color:red">あなたが新しい ${MAGIC_ATTRIBUTE_MAXDAMAGE[attrId]} になりました！</p>`;
-        }else{
-          log.innerHTML += `<p style="color:blue">相手が新しい ${MAGIC_ATTRIBUTE_MAXDAMAGE[attrId]} になりました！</p>`;
-        }
-      }
     }
 
     // -------------------------
     // 経験値計算
     // battleExp を計算する関数
-    // @param {boolean} isAllChampion - 相手が全属性チャンピオン（魔導覇者）かどうか
-    // @param {boolean} isChallenger - 自分が挑戦者かどうか（true＝挑戦者、false＝チャンピオン側）
+    // @param {int} scenarioNumber - シナリオ番号
+    // @param {int} battleNumber - シナリオ内バトル番号
     // @param {boolean} isWin - 自分が勝ったかどうか
     // @returns {number} gainedExp - 獲得経験値
     // -------------------------
-    function calcBattleExp(isAllChampion, isChallenger, isWin) {
-      // 全属性チャンピオン（魔導覇者）
-      if (isAllChampion) {
-        if (isChallenger) {
-          return isWin ? 3 : 1;   // 挑戦：勝ち3 / 負け1
-        } else {
-          return isWin ? 1 : 0;   // 防衛：勝ち1 / 負け0
-        }
-      }
-
-      // 属性チャンピオン（火・水・風・土）
-      if (isChallenger) {
-        return isWin ? 2 : 1;     // 挑戦：勝ち2 / 負け1
-      } else {
-        return isWin ? 1 : 0;     // 防衛：勝ち1 / 負け0
+    function calcScenarioBattleExp(scenarioNumber, battleNumber, isWin) {
+      switch (scenarioNumber) {
+        case 1:
+          if ([1, 2, 3].includes(battleNumber)){
+            return isWin ? 1 : 0;
+          }else{
+            return 0;
+          }
+        default:
+          return 0;
       }
     }
 
     //help表示
     document.getElementById("helpBtn").onclick = openHelpModal;
+
+    // -------------------------
+    // シナリオに戻る
+    // -------------------------
+    document.getElementById("scenarioBackBtn").onclick = () => {
+      sessionStorage.setItem("scenarioWinFlag", myWinFlag);
+      sessionStorage.setItem("scenarioId", scenarioId);
+      sessionStorage.setItem("battleId", battleId);
+      switch (scenarioId) {
+        case 1:
+          location.href = "scenario1.html";
+          break;
+        default:
+          location.href = "player_gome.html";
+          break;
+      }
+    };
   </script>
 </body>
 </html>
