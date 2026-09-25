@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>生徒強化</title>
+  <title>生徒指導（強化）</title>
   <style>
     body { font-family: sans-serif; }
     .event-block { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
@@ -30,11 +30,11 @@
     <li>9 → 8：75</li>
     <li>8 → 7：100</li>
     <li>7 → 6：150</li>
-    <li>6 → 5：200</li>
+    <li>6 → 5：220</li>
     <li>5 → 4：300</li>
     <li>4 → 3：400</li>
     <li>3 → 2：600</li>
-    <li>2 → 1：800</li>
+    <li>2 → 1：850</li>
   </ul>
 
   <h2>基礎魔力量</h2>
@@ -443,28 +443,22 @@
         }
       }
 
-      // 2. 累計経験値が600を超えていないかチェック
-      const totalExpAfter = usedExp;
-      if (totalExpAfter > totalExpLimit) {
-        alert("累計経験値が600を超えています。強化内容を見直してください。");
-        return;
-      }
-
-      // 3. Firestore 更新
+      // 2. Firestore 更新
       try {
         const charRef = db.collection("characters").doc(charId);
         await charRef.update({
           baseDice: baseDice,
           events: events,
+          battleExp: expRemain,
           updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
         document.getElementById("confirmArea").classList.add("hidden");
         document.getElementById("resultArea").classList.remove("hidden");
-        document.getElementById("status").innerText = "強化が完了しました。";
+        document.getElementById("status").innerText = "指導が完了しました。";
 
       } catch (e) {
-        alert("強化の保存中にエラーが発生しました：" + e);
+        alert("指導の保存中にエラーが発生しました：" + e);
       }
     };
 
