@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>生徒強化</title>
+  <style>
+    body { font-family: sans-serif; }
+    .event-block { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
+    .hidden { display: none; }
+    button { margin: 3px; }
+  </style>
+</head>
+
+<body>
+  <h1>生徒強化</h1>
+
+  <p>生徒名：<span id="charName"></span></p>
+
+  <p>累計経験値上限：<span id="maxExp"></span>600</p>
+  <p>強化前使用済み経験値：<span id="oldUsedExp">0</span></p>
+  <p>使用済み経験値：<span id="usedExp">0</span></p>
+  <p>強化可能経験値（残り）：<span id="expRemain">0</span></p>
+
+  <p>基礎魔力量を 1 上げるために必要な経験値は36です</p>
+  <p>レベルを 1 上げるために必要な経験値は10です</p>
+  <p>発動抵抗を 1 下げるために必要な経験値は以下のとおりです</p>
+  <ul>
+    <li>10 → 9：50</li>
+    <li>9 → 8：75</li>
+    <li>8 → 7：100</li>
+    <li>7 → 6：150</li>
+    <li>6 → 5：200</li>
+    <li>5 → 4：300</li>
+    <li>4 → 3：400</li>
+    <li>3 → 2：600</li>
+    <li>2 → 1：800</li>
+  </ul>
+
+  <h2>基礎魔力量</h2>
+  <p>
+    強化前：<span id="baseDiceOriginal">4</span><br>
+    現在値：<span id="baseDice">4</span>
+    <button id="baseDicePlus">+1</button>
+    <button id="baseDiceMinus">-1</button>
+  </p>
+
+  <h2>属性</h2>
+  <div id="eventsArea"></div>
+
+  <button id="helpBtn">ヘルプ</button>
+  <div id="modalOverlay" onclick="closeHelpModal()">
+    <div id="modalContent" onclick="event.stopPropagation();"></div>
+  </div><br>
+
+  <button id="enhanceBtn">強化内容を確認</button>
+
+  <!-- 確認ダイアログ -->
+  <div id="confirmArea" class="hidden">
+    <p>強化前より弱くなっている項目がないかチェックします。</p>
+    <p>使用済み経験値：<span id="confirmUsedExp"></span></p>
+    <button id="confirmBack">戻る</button>
+    <button id="confirmOk">確定</button>
+  </div>
+
+  <!-- 強化結果 -->
+  <div id="resultArea" class="hidden">
+    <p>生徒の能力を強化しました！</p>
+    <p>学籍番号：<span id="resultId"></span></p>
+  </div>
+
+  <button id="backHome">プレイヤーホームに戻る</button>
+
+  <p id="status"></p>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="attributes.js"></script>
+  <script src="version.js"></script>
+  <script src="helpmodal/modal.js"></script>
+
+  <script>
+    // -------------------------
+    // Firebase 初期化
+    // -------------------------
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    let playerRef = null;
+    const charId = sessionStorage.getItem("selectedCharId");
+
+    // -------------------------
+    // 経験値・能力値
+    // -------------------------
+    let totalExpLimit = 600;   // 累計上限
+    let usedExp = 0;           // 使用済み経験値
+    let oldUsedExp = 0;        // 逆算した使用済み経験値
+    let playerExp = 0;         // プレイヤーが持っている追加経験値
+    let characterExp = 0;      // キャラクターが持っている追加経験値
+    let expRemain = 0;         // 強化可能経験値（残り）
+
+    // 強化前の値（弱体化禁止判定用）
+    let originalBaseDice = 4;
+    let originalEvents = {
+      1: { dice: 0, critical: 10 , maxAchieve: 0 },
+      2: { dice: 0, critical: 10 , maxAchieve: 0 },
+      3: { dice: 0, critical: 10 , maxAchieve: 0 },
+      4: { dice: 0, critical: 10 , maxAchieve: 0 }
+    };
+
+    // 編集中の値
+    let baseDice = 4;
+    let events = {
+      1: { dice: 0, critical: 10 , maxAchieve: 0 },
+      2: { dice: 0, critical: 10 , maxAchieve: 0 },
+      3: { dice: 0, critical: 10 , maxAchieve: 0 },
+      4: { dice: 0, critical: 10 , maxAchieve: 0 }
+    };
+
+    // -------------------------
+    // コストテーブル（作成画面と同じ）
+    // -------------------------
+    const criticalCostTable = {
+        10: 50,
+        9: 75,
+        8: 100,
+        7: 150,
+        6: 220,
+        5: 300,
+        4: 400,
+        3: 600,
+        2: 850,
+        1: 1200
+    };
+
+    const criticalRefundTable = {
+        9: 50,
+        8: 75,
+        7: 100,
+        6: 150,
+        5: 220,
+        4: 300,
+        3: 400,
+        2: 600,
+        1: 850,
+        0: 1200 // 0→1 は本来禁止推奨だが一応記述
+    };
+
+    // -------------------------
+    // プレイヤー情報読み込み
+    // -------------------------
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        location.href = "index.html";
+        return;
+      }
+
+        if (!charId) {
+        alert("生徒が選択されていません");
+        location.href = "player_home.html";
+        return;
+        }
+
+      //自分のプレイヤーデータセット
+      playerRef = db.collection("players").doc(user.uid);
+    });
+
+    // -------------------------
+    // プレイヤー情報読み込み
+    // -------------------------
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        location.href = "index.html";
+        return;
+      }
+
+      playerRef = db.collection("players").doc(user.uid);
+
+      try {
+        const playerSnap = await playerRef.get();
+        if (playerSnap.exists) {
+          const playerData = playerSnap.data();
+          playerExp = playerData.battleExp || 0;
+          totalExpLimit += playerExp;
+        }
+
+        // キャラデータ読み込み
+        await loadCharacterData();
+
+      } catch (e) {
+        alert("データ読み込み中にエラーが発生しました：" + e);
+        location.href = "player_home.html";
+        return;
+      }
+    });
+
+    // -------------------------
+    // キャラデータ読み込み＆逆算
+    // -------------------------
+    async function loadCharacterData() {
+      const charRef = db.collection("characters").doc(charId);
+      const snap = await charRef.get();
+
+      if (!snap.exists) {
+        alert("対象キャラが存在しません。");
+        location.href = "player_home.html";
+        return;
+      }
+
+      const data = snap.data();
+
+      // 生徒名
+      document.getElementById("charName").innerText = data.name;
+      document.getElementById("resultId").innerText = charId;
+
+      // 強化前の値をセット
+      originalBaseDice = data.baseDice || 4;
+      baseDice = originalBaseDice;
+
+      // events は data.events を想定（作成時と同じ構造）
+      for (let i = 1; i <= 4; i++) {
+        const ev = data.events && data.events[i] ? data.events[i] : { dice: 0, critical: 10, maxAchieve: 0 };
+        originalEvents[i] = {
+          dice: ev.dice,
+          critical: ev.critical,
+          maxAchieve: ev.maxAchieve || 0
+        };
+        events[i] = {
+          dice: ev.dice,
+          critical: ev.critical,
+          maxAchieve: ev.maxAchieve || 0
+        };
+      }
+
+      // 使用済み経験値を逆算
+      oldUsedExp = calcUsedExpFromCurrentState();
+      // 累計経験値
+      const totalAvailable = Math.min(oldUsedExp + characterExp, totalExpLimit);
+      expRemain = totalAvailable - oldUsedExp;
+      if (expRemain < 0) expRemain = 0;
+
+      // UI生成＆更新
+      buildEventsUI();
+      updateUI();
+    }
+
+    // -------------------------
+    // 使用済み経験値の逆算
+    // -------------------------
+    function calcUsedExpFromCurrentState() {
+      let sum = 0;
+
+      // 基礎魔力量：初期4からの差分
+      if (originalBaseDice > 4) {
+        sum += (originalBaseDice - 4) * 36;
+      }
+
+      // 各属性のレベル・クリティカル
+      for (let i = 1; i <= 4; i++) {
+        const ev = originalEvents[i];
+
+        // レベル：初期0からの差分
+        if (ev.dice > 0) {
+          sum += ev.dice * 10;
+        }
+
+        // クリティカル：10→現在値までの累積コスト
+        let c = 10;
+        while (c > ev.critical) {
+          sum += criticalCostTable[c];
+          c--;
+        }
+      }
+
+      return sum;
+    }
+
+    // -------------------------
+    // UI生成（属性）
+    // -------------------------
+    const eventsArea = document.getElementById("eventsArea");
+
+    function buildEventsUI() {
+      eventsArea.innerHTML = "";
+
+      for (let i = 1; i <= 4; i++) {
+        const div = document.createElement("div");
+        div.className = "event-block";
+        div.innerHTML = `
+          <h3>属性 ${MAGIC_ATTRIBUTES[i]}</h3>
+          強化前レベル：<span id="diceOriginal${i}">${originalEvents[i].dice}</span><br>
+          現在レベル：<span id="dice${i}">${events[i].dice}</span>
+          <button id="dicePlus${i}">+1</button>
+          <button id="diceMinus${i}">-1</button>
+          <br>
+          強化前発動抵抗：<span id="criticalOriginal${i}">${originalEvents[i].critical}</span><br>
+          現在発動抵抗：<span id="critical${i}">${events[i].critical}</span>
+          <button id="criticalPlus${i}">+1</button>
+          <button id="criticalMinus${i}">-1</button>
+        `;
+        eventsArea.appendChild(div);
+      }
+
+      // ボタンイベント設定
+      setupEventButtons();
+    }
+
+    // -------------------------
+    // UI更新
+    // -------------------------
+    function updateUI() {
+      document.getElementById("maxExp").innerText = totalExpLimit;
+      document.getElementById("oldUsedExp").innerText = oldUsedExp;
+      document.getElementById("usedExp").innerText = usedExp;
+      document.getElementById("expRemain").innerText = expRemain;
+
+      document.getElementById("baseDiceOriginal").innerText = originalBaseDice;
+      document.getElementById("baseDice").innerText = baseDice;
+
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById(`diceOriginal${i}`).innerText = originalEvents[i].dice;
+        document.getElementById(`dice${i}`).innerText = events[i].dice;
+        document.getElementById(`criticalOriginal${i}`).innerText = originalEvents[i].critical;
+        document.getElementById(`critical${i}`).innerText = events[i].critical;
+      }
+    }
+
+    // -------------------------
+    // 基礎魔力量増減（編集中は弱体化OK）
+    // -------------------------
+    document.getElementById("baseDicePlus").onclick = () => {
+      if (expRemain >= 36) {
+        baseDice++;
+        expRemain -= 36;
+        usedExp += 36;
+        updateUI();
+      }
+    };
+
+    document.getElementById("baseDiceMinus").onclick = () => {
+      // 作成時と同じく「1段階戻す」扱い（編集中はOK）
+      if (baseDice > 4) {
+        baseDice--;
+        expRemain += 36;
+        usedExp -= 36;
+        updateUI();
+      }
+    };
+
+    // -------------------------
+    // 属性ダイス・クリティカル増減（編集中は弱体化OK）
+    // -------------------------
+    function setupEventButtons() {
+      for (let i = 1; i <= 4; i++) {
+        // dice +1
+        document.getElementById(`dicePlus${i}`).onclick = () => {
+          if (expRemain >= 10) {
+            events[i].dice++;
+            expRemain -= 10;
+            usedExp += 10;
+            updateUI();
+          }
+        };
+
+        // dice -1
+        document.getElementById(`diceMinus${i}`).onclick = () => {
+          if (events[i].dice > 0) {
+            events[i].dice--;
+            expRemain += 10;
+            usedExp -= 10;
+            updateUI();
+          }
+        };
+
+        // critical -1（段階的コスト）
+        document.getElementById(`criticalMinus${i}`).onclick = () => {
+          const c = events[i].critical;
+          const cost = criticalCostTable[c];
+
+          if (c > 0 && expRemain >= cost) {
+            events[i].critical--;
+            expRemain -= cost;
+            usedExp += cost;
+            updateUI();
+          }
+        };
+
+        // critical +1（段階的返却）
+        document.getElementById(`criticalPlus${i}`).onclick = () => {
+          const c = events[i].critical;
+          const refund = criticalRefundTable[c];
+
+          if (c < 10) {
+            events[i].critical++;
+            expRemain += refund;
+            usedExp -= refund;
+            updateUI();
+          }
+        };
+      }
+    }
+
+    // -------------------------
+    // 強化確認ボタン
+    // -------------------------
+    document.getElementById("enhanceBtn").onclick = () => {
+      // 累計経験値（初期360＋追加経験値）と上限600を再計算
+      const totalExpAfter = usedExp; // 逆算＋編集後の使用済み
+      document.getElementById("confirmUsedExp").innerText = totalExpAfter;
+      document.getElementById("confirmTotalExp").innerText = totalExpAfter;
+
+      document.getElementById("confirmArea").classList.remove("hidden");
+    };
+
+    document.getElementById("confirmBack").onclick = () => {
+      document.getElementById("confirmArea").classList.add("hidden");
+    };
+
+    // -------------------------
+    // 強化確定（弱体化禁止チェック＋600上限チェック）
+    // -------------------------
+    document.getElementById("confirmOk").onclick = async () => {
+      // 1. 強化前より弱くなっていないかチェック
+      // 基礎魔力量
+      if (baseDice < originalBaseDice) {
+        alert("基礎魔力量が強化前より下がっています。弱体化はできません。");
+        return;
+      }
+
+      // 各属性
+      for (let i = 1; i <= 4; i++) {
+        if (events[i].dice < originalEvents[i].dice) {
+          alert(`属性${MAGIC_ATTRIBUTES[i]}のレベルが強化前より下がっています。弱体化はできません。`);
+          return;
+        }
+        if (events[i].critical > originalEvents[i].critical) {
+          alert(`属性${MAGIC_ATTRIBUTES[i]}の発動抵抗が強化前より上がっています。弱体化はできません。`);
+          return;
+        }
+      }
+
+      // 2. 累計経験値が600を超えていないかチェック
+      const totalExpAfter = usedExp;
+      if (totalExpAfter > totalExpLimit) {
+        alert("累計経験値が600を超えています。強化内容を見直してください。");
+        return;
+      }
+
+      // 3. Firestore 更新
+      try {
+        const charRef = db.collection("characters").doc(charId);
+        await charRef.update({
+          baseDice: baseDice,
+          events: events,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        document.getElementById("confirmArea").classList.add("hidden");
+        document.getElementById("resultArea").classList.remove("hidden");
+        document.getElementById("status").innerText = "強化が完了しました。";
+
+      } catch (e) {
+        alert("強化の保存中にエラーが発生しました：" + e);
+      }
+    };
+
+    // -------------------------
+    // プレイヤーホームへ戻る
+    // -------------------------
+    document.getElementById("backHome").onclick = () => {
+      location.href = "player_home.html";
+    };
+  </script>
+</body>
+</html>

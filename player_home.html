@@ -170,6 +170,7 @@
   <label for="enemySelect">対戦相手：</label>
   <select id="enemySelect"></select><br><br>
   <button id="battleBtn">バトル開始</button><br><br>
+  <button id="character_edit">生徒指導（強化）</button><br><br>
   <button id="character_delete">生徒卒業（削除）</button><br><br>
   <button id="helpBtn">ヘルプ</button>
 <div id="modalOverlay" onclick="closeHelpModal()">
@@ -713,6 +714,25 @@
         select.appendChild(option);
       }
     }
+    // -------------------------
+    // キャラクター強化 2026/09/25
+    // -------------------------
+    document.getElementById("character_edit").onclick = () => {
+      const selectedList = document.querySelectorAll('input[name="charSelect"]:checked');
+
+      if (selectedList.length === 0) {
+        alert("指導する（強化）生徒を選択してください");
+        return;
+      }
+
+      if (selectedList.length > 1) {
+        alert("指導する生徒は同時に1体のみ選択可能です。1体だけ選択してください。");
+        return;
+      }
+      sessionStorage.setItem("selectedCharId", selectedList[0].value);
+      location.href = "character_edit.html";
+    };
+
     // -------------------------
     // キャラクター削除
     // -------------------------
