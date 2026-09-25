@@ -19,9 +19,6 @@
       color: #4CAF50; /* 緑 */
       font-weight: bold;
     }
-    #createStaminaBar {
-      background-color: #2196F3; /* 青 */
-    }
     .staminaRow {
       display: flex;
       justify-content: space-between;
@@ -123,17 +120,9 @@
   <!-- 🔹 スタミナ表示 -->
   <div id="staminaArea">
     <div class="staminaRow">
-      <!-- 入学スタミナ -->
-      <div class="staminaBox">
-        <h4>生徒入学スタミナ</h4>
-        <div><span id="createStaminaText"></span></div>
-        <div class="staminaBar" id="createStaminaBar"></div>
-        <p id="nextCreateRecoveryText"></p>
-      </div>
-
       <!-- バトルスタミナ -->
       <div class="staminaBox">
-        <h4>バトルスタミナ</h4>
+        <h4>スタミナ</h4>
         <div><span id="battleStaminaText"></span></div>
         <div class="staminaBar" id="battleStaminaBar"></div>
         <p id="nextBattleRecoveryText"></p>
@@ -188,11 +177,9 @@
     let currentPage = 1;
     const pageSize = 4;
 
-    let createStamina = 0;
     let battleStamina = 0;
-    let lastCreateRecovery = 0;
     let lastBattleRecovery = 0;
-    const maxStamina = 10;
+    const maxStamina = 12;
 
     // -------------------------
     // ログイン情報表示
@@ -220,9 +207,7 @@
       document.getElementById("playerExpText").innerText = `${data.battleExp || 0}ポイント`;
 
       // スタミナ情報取得
-      createStamina = data.create_stamina;
       battleStamina = data.battle_stamina;
-      lastCreateRecovery = data.last_create_recovery.toMillis();
       lastBattleRecovery = data.last_battle_recovery.toMillis();
 
       updateStaminaDisplay();
@@ -247,20 +232,6 @@
     function updateStaminaDisplay() {
       const now = Date.now();
 
-      // --- キャラ作成スタミナ回復 ---
-      const diffCreateHours = Math.floor((now - lastCreateRecovery) / (1000 * 60 * 60));
-      if (diffCreateHours > 0 && createStamina < maxStamina) {
-        createStamina = Math.min(maxStamina, createStamina + diffCreateHours);
-        // 回復できる回数（スタミナ上限を超えない）
-        const recoverCount = Math.min(diffCreateHours, maxStamina - createStamina);
-
-        // スタミナ回復
-        createStamina += recoverCount;
-
-        // lastCreateRecovery を「回復した分だけ」進める
-        lastCreateRecovery += recoverCount * (1000 * 60 * 60);
-      }
-
       // --- バトルスタミナ回復 ---
       const diffBattleHours = Math.floor((now - lastBattleRecovery) / (1000 * 60 * 60));
       if (diffBattleHours > 0 && battleStamina < maxStamina) {
@@ -275,36 +246,21 @@
       }
 
       // --- 次回回復までの残り時間（個別） ---
-      const nextCreateRecovery = lastCreateRecovery + 1000 * 60 * 60;
       const nextBattleRecovery = lastBattleRecovery + 1000 * 60 * 60;
-
-      const remainingCreate = createStamina >= maxStamina
-        ? "満タン"
-        : `${Math.max(0, Math.floor((nextCreateRecovery - now) / (1000 * 60)))} 分`;
 
       const remainingBattle = battleStamina >= maxStamina
         ? "満タン"
         : `${Math.max(0, Math.floor((nextBattleRecovery - now) / (1000 * 60)))} 分`;
 
       // --- 表示更新 ---
-      document.getElementById("createStaminaText").innerText = `${createStamina}/${maxStamina}`;
       document.getElementById("battleStaminaText").innerText = `${battleStamina}/${maxStamina}`;
 
-      document.getElementById("createStaminaBar").style.width = `${(createStamina / maxStamina) * 100}%`;
       document.getElementById("battleStaminaBar").style.width = `${(battleStamina / maxStamina) * 100}%`;
 
-      document.getElementById("nextCreateRecoveryText").innerText = `入学スタミナ回復まで：${remainingCreate}`;
-      document.getElementById("nextBattleRecoveryText").innerText = `バトルスタミナ回復まで：${remainingBattle}`;
+      document.getElementById("nextBattleRecoveryText").innerText = `スタミナ回復まで：${remainingBattle}`;
 
       // ★変更：満タン時だけテキスト色を変える
-      const createText = document.getElementById("nextCreateRecoveryText");
       const battleText = document.getElementById("nextBattleRecoveryText");
-
-      if (createStamina >= maxStamina) {
-        createText.classList.add("full");   // ★追加
-      } else {
-        createText.classList.remove("full"); // ★追加
-      }
 
       if (battleStamina >= maxStamina) {
         battleText.classList.add("full");   // ★追加
