@@ -139,6 +139,32 @@
         document.getElementById(`dice${i}`).innerText = events[i].dice;
         document.getElementById(`critical${i}`).innerText = events[i].critical;
       }
+      // ボタン制御（追加）
+      // 基礎魔力量
+      const basePlusBtn = document.getElementById("baseDicePlus");
+      const baseMinusBtn = document.getElementById("baseDiceMinus");
+
+      basePlusBtn.disabled = exp < 36;     // 経験値不足なら +1 禁止
+      baseMinusBtn.disabled = baseDice <= 4; // 初期値より下げられない
+
+      // 属性
+      for (let i = 1; i <= 4; i++) {
+        const dicePlusBtn = document.getElementById(`dicePlus${i}`);
+        const diceMinusBtn = document.getElementById(`diceMinus${i}`);
+        const criticalPlusBtn = document.getElementById(`criticalPlus${i}`);
+        const criticalMinusBtn = document.getElementById(`criticalMinus${i}`);
+
+        // dice
+        dicePlusBtn.disabled = exp < 10;           // 経験値不足なら +1 禁止
+        diceMinusBtn.disabled = events[i].dice <= 0; // 0 より下げられない
+
+        // critical
+        const c = events[i].critical;
+        const cost = criticalCostTable[c];
+
+        criticalMinusBtn.disabled = exp < cost;     // 経験値不足なら -1 禁止
+        criticalPlusBtn.disabled = c >= 10;         // 初期値より上げられない
+      }
     }
 
     // -------------------------
