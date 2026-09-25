@@ -81,7 +81,7 @@
   <h3>バトルログ</h3>
   <div id="battleLog"></div>
 
-  <button onclick="location.href='player_home.html'">プレイヤーホームへ戻る</button>
+  <button id="backHomeBtn" onclick="location.href='player_home.html'">プレイヤーホームへ戻る</button>
 
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -169,6 +169,7 @@
       }
       enemyChar = enemySnap.data();
 
+      document.getElementById("backHomeBtn").disabled = false;
       renderCharInfo();
     });
 
@@ -254,6 +255,7 @@
     document.getElementById("rollBtn").onclick = async () => {
       const ok = await consumeStamina(playerRef,2);
       if (!ok) return;  // スタミナ不足なら処理中断
+      document.getElementById("backHomeBtn").disabled = true;
 
       const eventNo = String(enemyAttrId);
 
@@ -347,6 +349,8 @@
 
       winnerAchieve();
 
+      document.getElementById("backHomeBtn").disabled = false;
+      
       await updateBattleResult();
     }
 
