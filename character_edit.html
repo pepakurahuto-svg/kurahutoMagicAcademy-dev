@@ -57,8 +57,9 @@
 
   <!-- 確認ダイアログ -->
   <div id="confirmArea" class="hidden">
-    <p>強化前より弱くなっている項目がないかチェックします。</p>
-    <p>使用済み経験値：<span id="confirmUsedExp"></span></p>
+    <p>指導結果を確定してよろしいですか。</p>
+    <p>使用済みバトル経験値：<span id="confirmUsedExp"></span></p>
+    <p>使用後バトル経験値：<span id="confirmBattleExp"></span></p>
     <button id="confirmBack">戻る</button>
     <button id="confirmOk">確定</button>
   </div>
@@ -444,10 +445,8 @@
     // 強化確認ボタン
     // -------------------------
     document.getElementById("enhanceBtn").onclick = () => {
-      // 累計経験値（初期360＋追加経験値）と上限600を再計算
-      const totalExpAfter = usedExp; // 逆算＋編集後の使用済み
-      document.getElementById("confirmUsedExp").innerText = totalExpAfter;
-      document.getElementById("confirmTotalExp").innerText = totalExpAfter;
+      document.getElementById("confirmUsedExp").innerText = usedExp;
+      document.getElementById("confirmBattleExp").innerText = expRemain;
 
       document.getElementById("confirmArea").classList.remove("hidden");
     };
@@ -494,7 +493,7 @@
         document.getElementById("status").innerText = "指導が完了しました。";
 
       } catch (e) {
-        alert("指導の保存中にエラーが発生しました：" + e);
+        alert("結果の保存中にエラーが発生しました：" + e);
       }
     };
 

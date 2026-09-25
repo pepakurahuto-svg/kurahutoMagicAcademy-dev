@@ -105,6 +105,8 @@
 
       //自分のプレイヤーデータセット
       playerRef = db.collection("players").doc(user.uid);
+      //画面セット
+      updateUI();
     });
 
     // -------------------------
