@@ -93,7 +93,34 @@
       3: { dice: 0, critical: 10 , maxAchieve: 0 },
       4: { dice: 0, critical: 10 , maxAchieve: 0 }
     };
+    // -------------------------
+    // コストテーブル（作成画面と同じ）
+    // -------------------------
+    const criticalCostTable = {
+        10: 50,
+        9: 75,
+        8: 100,
+        7: 150,
+        6: 220,
+        5: 300,
+        4: 400,
+        3: 600,
+        2: 850,
+        1: 1200
+    };
 
+    const criticalRefundTable = {
+        9: 50,
+        8: 75,
+        7: 100,
+        6: 150,
+        5: 220,
+        4: 300,
+        3: 400,
+        2: 600,
+        1: 850,
+        0: 1200 // 0→1 は本来禁止推奨だが一応記述
+    };
     // -------------------------
     // プレイヤー情報読み込み
     // -------------------------
@@ -212,22 +239,7 @@
       // critical -1（段階的にコスト増加）
       document.getElementById(`criticalMinus${i}`).onclick = () => {
         const c = events[i].critical;
-
-        // 段階的コスト
-        const costTable = {
-          10: 50,
-          9: 75,
-          8: 100,
-          7: 150,
-          6: 220,
-          5: 300,
-          4: 400,
-          3: 600,
-          2: 850,
-          1: 1200
-        };
-
-        const cost = costTable[c];
+        const cost = criticalCostTable[c];
 
         if (c > 0 && exp >= cost) {
           events[i].critical--;
@@ -239,22 +251,7 @@
       // critical +1（段階的に返却経験値）
       document.getElementById(`criticalPlus${i}`).onclick = () => {
         const c = events[i].critical;
-
-        // 返却経験値テーブル（期待値ベース）
-        const refundTable = {
-          9: 50,
-          8: 75,
-          7: 100,
-          6: 150,
-          5: 220,
-          4: 300,
-          3: 400,
-          2: 600,
-          1: 850,
-          0: 1200 // 0→1 は本来禁止推奨だが一応記述
-        };
-
-        const refund = refundTable[c];
+        const refund = criticalRefundTable[c];
 
         // 初期値より増やせない（critical は 10 が上限）
         if (c < 10) {
