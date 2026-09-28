@@ -9,6 +9,9 @@
       padding: 10px;
       margin-bottom: 10px;
       width: 600px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
     }
     .staminaBar {
       height: 20px;
@@ -130,18 +133,13 @@
         <div><span id="playerExpText"></span></div>
       </div>
     </div>
-  </div>
-  <!-- 🔹 学院付与表示 -->
-  <div id="staminaArea">
+    <!-- 🔹 学院付与表示 -->
     <div class="staminaRow">
-      <!-- バトルスタミナ -->
-      <div class="staminaBox">
-        <h4>現在の学院付与</h4>
-        <p>生徒全員の能力に一時的に以下の補正がかかります。</p>
-        <div><span id="fieldsNowText"></span></div><br>
-        <h4>今後の学院付与</h4>
-        <div><span id="fieldsFutuerText"></span></div>
-      </div>
+      <h4>現在の学院付与</h4>
+      <p>生徒全員の能力に一時的に以下の補正がかかります。</p>
+      <div><span id="fieldsNowText"></span></div><br>
+      <h4>今後の学院付与</h4>
+      <div><span id="fieldsFutuerText"></span></div>
     </div>
   </div>
 
