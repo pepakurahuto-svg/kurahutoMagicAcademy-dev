@@ -201,7 +201,7 @@
       battleId = sessionStorage.getItem("battleId");
       scenarioWinFlag = sessionStorage.getItem("scenarioWinFlag");
 
-      switch (battleId) {
+      switch (int(battleId)) {
         case 0:
           document.getElementById("scene1").classList.remove("hidden");
           break;
