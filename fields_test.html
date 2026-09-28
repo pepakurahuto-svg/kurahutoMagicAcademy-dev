@@ -4,14 +4,17 @@
   <meta charset="UTF-8">
   <title>フィールドテスト</title>
   <style>
-    #staminaArea {
+    #staminaAndFieldArea {
       border: 1px solid #888;
       padding: 10px;
       margin-bottom: 10px;
-      width: 600px;
+      width: 1200px;
       display: flex;
       justify-content: space-between;
       gap: 10px;
+    }
+    #staminaArea {
+      width: 48%; /* 横に2つ並べるための幅 */
     }
     .staminaBar {
       height: 20px;
@@ -118,23 +121,24 @@
   <p>ようこそ、プレイヤーさん！</p>
 
   <!-- 🔹 スタミナ表示 -->
-  <div id="staminaArea">
-    <div class="staminaRow">
-      <!-- バトルスタミナ -->
-      <div class="staminaBox">
-        <h4>スタミナ</h4>
-        <div><span id="battleStaminaText"></span></div>
-        <div class="staminaBar" id="battleStaminaBar"></div>
-        <p id="nextBattleRecoveryText"></p>
+  <div id="staminaAndFieldArea">
+    <div id="staminaArea">
+      <div class="staminaRow">
+        <!-- バトルスタミナ -->
+        <div class="staminaBox">
+          <h4>スタミナ</h4>
+          <div><span id="battleStaminaText"></span></div>
+          <div class="staminaBar" id="battleStaminaBar"></div>
+          <p id="nextBattleRecoveryText"></p>
+        </div>
+        <!-- 🔥 プレイヤー経験値表示（新規追加） -->
+        <div class="playerExpBox">
+          <h4>指導実績</h4>
+          <div><span id="playerExpText"></span></div>
+        </div>
       </div>
-      <!-- 🔥 プレイヤー経験値表示（新規追加） -->
-      <div class="playerExpBox">
-        <h4>指導実績</h4>
-        <div><span id="playerExpText"></span></div>
-      </div>
-    </div>
     <!-- 🔹 学院付与表示 -->
-    <div class="staminaRow">
+    <div id="staminaArea">
       <h4>現在の学院付与</h4>
       <p>生徒全員の能力に一時的に以下の補正がかかります。</p>
       <div><span id="fieldsNowText"></span></div><br>
