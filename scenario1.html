@@ -222,6 +222,8 @@
             await myRef.update({
               ["scenario.1.clearFlag"]: true
             });
+          }else{
+            document.getElementById("scene7_lose").classList.remove("hidden");
           }
           break;
         default:
