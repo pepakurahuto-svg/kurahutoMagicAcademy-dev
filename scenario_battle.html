@@ -414,15 +414,15 @@
     // -------------------------
     // 経験値計算
     // battleExp を計算する関数
-    // @param {int} scenarioNumber - シナリオ番号
-    // @param {int} battleNumber - シナリオ内バトル番号
+    // @param {string} scenarioNumber - シナリオ番号
+    // @param {string} battleNumber - シナリオ内バトル番号
     // @param {boolean} isWin - 自分が勝ったかどうか
     // @returns {number} gainedExp - 獲得経験値
     // -------------------------
     function calcScenarioBattleExp(scenarioNumber, battleNumber, isWin) {
-      switch (scenarioNumber) {
+      switch (Number(scenarioNumber)) {
         case 1:
-          if ([1, 2, 3].includes(battleNumber)){
+          if ([1, 2, 3].includes(Number(battleNumber))){
             return isWin ? 1 : 0;
           }else{
             return 0;
@@ -442,7 +442,7 @@
       sessionStorage.setItem("scenarioWinFlag", myWinFlag);
       sessionStorage.setItem("scenarioId", scenarioId);
       sessionStorage.setItem("battleId", battleId);
-      switch (scenarioId) {
+      switch (Number(scenarioId)) {
         case 1:
           location.href = "scenario1.html";
           break;

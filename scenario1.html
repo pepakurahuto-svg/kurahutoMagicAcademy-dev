@@ -201,7 +201,7 @@
       battleId = sessionStorage.getItem("battleId");
       scenarioWinFlag = sessionStorage.getItem("scenarioWinFlag");
 
-      switch (int(battleId)) {
+      switch (Number(battleId)) {
         case 0:
           document.getElementById("scene1").classList.remove("hidden");
           break;
@@ -230,7 +230,7 @@
           break;
       }
       // battleId 1,2,3 はスタミナ消費なし
-      if ([1, 2, 3].includes(battleId)) {
+      if ([1, 2, 3].includes(Number(battleId))) {
       // 何もしない
       } else {
           const ok = await consumeStamina(playerRef,2);
