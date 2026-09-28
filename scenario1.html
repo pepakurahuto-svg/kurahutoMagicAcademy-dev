@@ -240,6 +240,21 @@
           }
       }
     });
+    // -------------------------
+    // シーン1
+    // -------------------------
+    document.getElementById("next1").onclick = () => {
+      document.getElementById("scene1").classList.add("hidden");
+      document.getElementById("scene2").classList.remove("hidden");
+    };
+    // -------------------------
+    // シーン2
+    // -------------------------
+    document.getElementById("battle1").onclick = () => {
+      sessionStorage.setItem("enemyId", 1);//初心者君
+      sessionStorage.setItem("enemyAttrId", 1);//火属性バトル
+      location.href = "scenario_battle.html";
+    };
 
     // ページ読み込み時に実行
     window.onload = () => {
