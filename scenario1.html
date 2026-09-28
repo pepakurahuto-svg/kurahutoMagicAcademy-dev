@@ -227,11 +227,11 @@
       // battleId 1,2,3 はスタミナ消費なし
       if ([1, 2, 3].includes(Number(battleId))) {
       // 何もしない
-        alert("スタミナ消費なし");
+        //alert("スタミナ消費なし");
       } else {
           const ok = await consumeStamina(playerRef,2);
           if (!ok) {
-              alert("スタミナ消費");
+              //alert("スタミナ消費");
               location.href = "player_home.html";
               return;
           }
@@ -344,7 +344,7 @@
 
       const description2 = `
         真面目で丁寧な先輩。${MAGIC_ATTRIBUTES[attribute]}属性の基礎魔法を正確に撃ってくるが、本気ではなく、<br>
-        力を図ってきている。。<br>
+        力を図ってきている。<br>
         <strong>${MAGIC_ATTRIBUTES[attribute]}属性の戦闘となります。</strong>
       `;
       Description2.innerHTML = description2;
@@ -355,7 +355,7 @@
         <strong>${MAGIC_ATTRIBUTES[attribute]}属性の戦闘となります。</strong>
       `;
       Description3.innerHTML = description3;
-      
+
     };
   </script>
 </body>

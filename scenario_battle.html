@@ -160,6 +160,8 @@
       document.getElementById("enemyTitle").innerText =
       `相手（${enemyChar.name}）`;
 
+      document.getElementById("scenarioBackBtn").disabled = true;
+
       renderCharInfo();
     });
 
@@ -333,6 +335,8 @@
       log.innerHTML += `<p>相手 魔法威力：${enemyAchieve}</p>`;
 
       winnerAchieve();
+
+      document.getElementById("scenarioBackBtn").disabled = false;
 
       await updateBattleResult();
     }
