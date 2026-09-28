@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>今日と明日のフィールド初期化</title>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+  <!-- Firebase設定（既存の設定ファイル） -->
+  <script src="firebase-config.js"></script>
+  <script src="attributes.js"></script>
+</head>
+
+<body>
+  <h1>フィールド初期化ページ</h1>
+  <p>今日と明日のフィールドを設定します。</p>
+
+  <button id="initBtn">初期化する</button>
+  <p id="status"></p>
+  <script>
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // フィールドマスター（名前と効果）
+    const FIELD_MASTER = {
+      fire_volcano_01: { name: "灼熱の火山洞窟", effect: "火属性魔法の威力＋20%" },
+      wind_training_01: { name: "風の訓練場", effect: "行動速度＋10%" },
+      earth_training_01: { name: "土の演習場", effect: "防御力＋10%" },
+      dark_corridor_01: { name: "闇の回廊", effect: "闇属性魔法の威力＋10%" },
+    };
+
+    // 重み（40,30,20,10）
+    const FIELD_WEIGHTS = [
+      { id: "fire_volcano_01", weight: 40 },
+      { id: "wind_training_01", weight: 30 },
+      { id: "earth_training_01", weight: 20 },
+      { id: "dark_corridor_01", weight: 10 },
+    ];
+
+    // フィールドID一覧（ランダム選択用）
+    const FIELD_IDS = Object.keys(FIELD_MASTER);
+
+    // ランダムフィールド選択
+    function chooseWeightedFieldId() {
+      const total = FIELD_WEIGHTS.reduce((sum, f) => sum + f.weight, 0);
+      let r = Math.random() * total;
+
+      for (const f of FIELD_WEIGHTS) {
+        if (r < f.weight) return f.id;
+        r -= f.weight;
+      }
+      return FIELD_WEIGHTS[FIELD_WEIGHTS.length - 1].id; // 保険で何も返してなかったら最後の値を返す
+    }
+
+    // 日付文字列 YYYY-MM-DD
+    function formatDate(d) {
+      return d.toISOString().slice(0, 10);
+    }
+
+    // 今日＋明日の 8 スロットを作成
+    async function initFields() {
+      const status = document.getElementById("status");
+      status.textContent = "初期化中...";
+
+      try {
+        const batch = db.batch();
+
+        const now = new Date();
+        const todayStr = formatDate(now);
+
+        const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        const tomorrowStr = formatDate(tomorrow);
+
+        const targets = [
+          { dateStr: todayStr, slots: [0,1,2,3] },
+          { dateStr: tomorrowStr, slots: [0,1,2,3] }
+        ];
+
+        targets.forEach(day => {
+          day.slots.forEach(slot => {
+            const fieldId = chooseWeightedFieldId();
+            const docId = `${day.dateStr}-slot${slot}`;
+            const ref = db.collection("battle_fields").doc(docId);
+
+            batch.set(ref, {
+              date: day.dateStr,
+              slot: slot,
+              fieldId: fieldId,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          });
+        });
+
+        await batch.commit();
+
+        status.textContent = "初期化完了：今日と明日のフィールドを設定しました。";
+      } catch (e) {
+        status.textContent = "エラー: " + e.message;
+      }
+    }
+
+    document.getElementById("initBtn").onclick = initFields;
+  </script>
+</body>
+</html>

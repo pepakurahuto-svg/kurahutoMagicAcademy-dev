@@ -1,0 +1,112 @@
+function chooseWeightedField(fields) {
+  const total = fields.reduce((sum, f) => sum + f.weight, 0);
+  let r = Math.random() * total;
+
+  for (const f of fields) {
+    if (r < f.weight) return f;
+    r -= f.weight;
+  }
+}
+
+
+
+// フィールドマスター（名前と効果）
+const FIELD_MASTER = {
+  fire_volcano_01: { name: "灼熱の火山洞窟", effect: "火属性魔法の威力＋20%" },
+  wind_training_01: { name: "風の訓練場", effect: "行動速度＋10%" },
+  earth_training_01: { name: "土の演習場", effect: "防御力＋10%" },
+  dark_corridor_01: { name: "闇の回廊", effect: "闇属性魔法の威力＋10%" },
+  // 必要に応じて追加
+};
+
+// 時刻フォーマット
+function formatTime(date) {
+  const h = String(date.getHours()).padStart(2, "0");
+  const m = String(date.getMinutes()).padStart(2, "0");
+  return `${h}:${m}`;
+}
+
+// slot の開始時刻
+function getSlotStart(date, slot) {
+  const d = new Date(date);
+  d.setHours(slot * 6, 0, 0, 0);
+  return d;
+}
+
+// Firestore から slot 情報を取得
+async function fetchSlotField(dateStr, slot) {
+  const docId = `${dateStr}-slot${slot}`;
+  const ref = db.collection("battle_fields").doc(docId);
+  const snap = await ref.get();
+  return snap.exists ? snap.data() : null;
+}
+
+// 現在＋次の4 slot の情報を取得して表示
+async function loadFieldPanel() {
+  const now = new Date();
+  const currentSlot = Math.floor(now.getHours() / 6);
+
+  const slotList = [];
+
+  let d = new Date(now);
+
+  for (let i = 0; i < 5; i++) {
+    const slot = Math.floor(d.getHours() / 6);
+    const dateStr = d.toISOString().slice(0, 10);
+
+    const start = getSlotStart(d, slot);
+    const end = new Date(start.getTime() + 6 * 60 * 60 * 1000);
+
+    const slotData = await fetchSlotField(dateStr, slot);
+
+    if (!slotData) {
+      slotList.push({
+        start, end,
+        field: { name: "未設定", effect: "なし" }
+      });
+    } else {
+      const fieldInfo = FIELD_MASTER[slotData.fieldId] || {
+        name: slotData.fieldId,
+        effect: "効果未設定"
+      };
+
+      slotList.push({
+        start, end,
+        field: fieldInfo
+      });
+    }
+
+    d = new Date(end);
+  }
+
+  // 現在のフィールド
+  const current = slotList[0];
+  document.getElementById("currentFieldTime").textContent =
+    `${formatTime(current.start)} ～ ${formatTime(current.end)}`;
+  document.getElementById("currentFieldName").textContent =
+    `フィールド名：${current.field.name}`;
+  document.getElementById("currentFieldEffect").textContent =
+    `効果：${current.field.effect}`;
+
+  // 次の4つ
+  const nextContainer = document.getElementById("nextFields");
+  nextContainer.innerHTML = "";
+
+  for (let i = 1; i < slotList.length; i++) {
+    const s = slotList[i];
+
+    const div = document.createElement("div");
+    div.style.marginBottom = "8px";
+
+    div.innerHTML = `
+      <p>${formatTime(s.start)} ～ ${formatTime(s.end)}</p>
+      <p>フィールド名：${s.field.name}</p>
+      <p>効果：${s.field.effect}</p>
+    `;
+
+    nextContainer.appendChild(div);
+  }
+}
+
+// ページ読み込み時に実行
+document.addEventListener("DOMContentLoaded", loadFieldPanel);

@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>フィールドテスト</title>
+  <style>
+    #staminaArea {
+      border: 1px solid #888;
+      padding: 10px;
+      margin-bottom: 10px;
+      width: 600px;
+    }
+    .staminaBar {
+      height: 20px;
+      background-color: #4caf50;
+      transition: width 0.5s;
+    }
+    .full {
+      color: #4CAF50; /* 緑 */
+      font-weight: bold;
+    }
+    .staminaRow {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .staminaBox {
+      width: 48%; /* 横に2つ並べるための幅 */
+    }
+
+    #battleStaminaBar {
+      background-color: #f44336; /* 赤 */
+    }
+    #championsArea {
+      display: flex;
+      overflow-x: auto;   /* 横スクロール維持 */
+      gap: 16px;          /* カード間の余白を少し広げる */
+      padding: 10px;      /* 内側に余白 */
+      white-space: nowrap;
+    }
+
+    .champCard {
+      flex: 0 0 auto;     /* 横スクロール用 */
+      width: 300px;       /* 情報量に合わせて少し広げる */
+      border: 2px solid #ddd; /* 枠線を太めに */
+      border-radius: 10px;    /* 角丸でカード感UP */
+      padding: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15); /* 影で立体感 */
+      background: var(--attr-color); /* ← JSから渡す色 */
+    }
+
+    .champCard h3 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .champCard h4 {
+      margin-bottom: 4px;
+      color: #555;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 2px;
+    }
+
+    .myCharCard {
+      flex: 0 0 auto;
+      width: 300px;
+      background: #f2f2f2; /* 薄いグレー */
+      border: 2px solid #ddd;
+      border-radius: 10px;
+      padding: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    .myCharCard h3 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .myCharCard h4 {
+      margin-bottom: 4px;
+      color: #555;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 2px;
+    }
+
+    #charactersArea {
+      display: flex;
+      overflow-x: auto;
+      gap: 16px;
+      padding: 10px;
+      white-space: nowrap;
+    }
+    .playerExpBox {
+      width: 48%; /* 横に2つ並べるための幅 */
+    }
+  </style>
+</head>
+<body>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="attributes.js"></script>
+  <script src="helpmodal/modal.js"></script>
+
+  <!-- ログイン情報（右上） -->
+  <div id="userInfo" style="position: absolute; top: 10px; right: 10px; text-align: right;">
+    <div id="playerName"></div>
+    <div>ログイン中：<span id="userEmail"></span></div>
+  </div>
+
+  <h1>クラフト魔法学院</h1>
+  <p>ようこそ、プレイヤーさん！</p>
+
+  <!-- 🔹 スタミナ表示 -->
+  <div id="staminaArea">
+    <div class="staminaRow">
+      <!-- バトルスタミナ -->
+      <div class="staminaBox">
+        <h4>スタミナ</h4>
+        <div><span id="battleStaminaText"></span></div>
+        <div class="staminaBar" id="battleStaminaBar"></div>
+        <p id="nextBattleRecoveryText"></p>
+      </div>
+      <!-- 🔥 プレイヤー経験値表示（新規追加） -->
+      <div class="playerExpBox">
+        <h4>指導実績</h4>
+        <div><span id="playerExpText"></span></div>
+      </div>
+    </div>
+  </div>
+  <!-- 🔹 学院付与表示 -->
+  <div id="staminaArea">
+    <div class="staminaRow">
+      <!-- バトルスタミナ -->
+      <div class="staminaBox">
+        <h4>現在の学院付与</h4>
+        <p>生徒全員の能力に一時的に以下の補正がかかります。</p>
+        <div><span id="fieldsNowText"></span></div><br>
+        <h4>今後の学院付与</h4>
+        <div><span id="fieldsFutuerText"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <button id="reloadBtn">リロード</button><br>
+  
+  <!-- チャンピオン表示 -->
+  <h2>最優秀生徒一覧</h2>
+  <div id="championsArea"></div>
+
+  <h2>あなたの生徒一覧</h2>
+  <div id="charactersArea"></div>
+
+  <div id="pagingArea">
+    <button id="prevPage">前のページ</button>
+    <span id="pageInfo"></span>
+    <button id="nextPage">次のページ</button>
+  </div>
+
+  <p id="status"></p>
+  <button onclick="location.href='character_create.html'">生徒入学（作成）</button><br>
+  <!-- ★ バトル説明文 -->
+  <p id="battleDescription">
+  </p>
+  <!-- ★ 対戦相手選択コンボボックス -->
+  <label for="enemySelect">対戦相手：</label>
+  <select id="enemySelect"></select><br><br>
+  <button id="battleBtn">バトル開始</button><br><br>
+  <!-- ★ シナリオ説明文 -->
+  <p id="scenarioDescription">
+  </p>
+  <label for="scenarioSelect">シナリオ：</label>
+  <select id="scenarioSelect"></select><br><br>
+  <button id="scenarioBtn">シナリオ開始</button><br><br>
+  <button id="character_edit">生徒指導（強化）</button><br><br>
+  <button id="character_delete">生徒卒業（削除）</button><br><br>
+  <button id="helpBtn">ヘルプ</button>
+<div id="modalOverlay" onclick="closeHelpModal()">
+  <div id="modalContent" onclick="event.stopPropagation();"></div>
+</div><br>
+  <button onclick="logout()">ログアウト</button><br>
+
+  <script>
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let currentUserId = null;
+    let characters = [];
+    let currentPage = 1;
+    const pageSize = 4;
+
+    let battleStamina = 0;
+    let lastBattleRecovery = 0;
+    const maxStamina = 12;
+
+    // -------------------------
+    // ログイン情報表示
+    // -------------------------
+    auth.onAuthStateChanged(async user => {
+      if (!user) {
+        location.href = "index.html";
+        return;
+      }else{
+        currentUserId = user.uid;
+      }
+
+      document.getElementById("userEmail").innerText = user.email;
+      const playerDoc = await db.collection("players").doc(currentUserId).get();
+
+      if (!playerDoc.exists) {
+        location.href = "player_create.html";
+        return;
+      }
+
+      const data = playerDoc.data();
+      document.getElementById("playerName").innerText = data.name + " さん";
+
+      //経験値情報
+      document.getElementById("playerExpText").innerText = `${data.battleExp || 0}ポイント`;
+
+      // スタミナ情報取得
+      battleStamina = data.battle_stamina;
+      lastBattleRecovery = data.last_battle_recovery.toMillis();
+
+      updateStaminaDisplay();
+
+      // キャラ一覧取得
+      const snap = await db.collection("characters")
+        .where("playerId", "==", currentUserId)
+        .orderBy("characterId", "asc")
+        .get();
+
+      characters = snap.docs.map(doc => doc.data());
+      renderPage();
+      loadEnemySelect(); // コンボボックスに選択肢を入れる
+      loadScenarioSelect(); // コンボボックスに選択肢を入れる
+
+      // 🔹 スタミナ表示を定期更新（リロードなし）
+      setInterval(updateStaminaDisplay, 1000);
+    });
+
+    // -------------------------
+    // スタミナ表示更新
+    // -------------------------
+    function updateStaminaDisplay() {
+      const now = Date.now();
+
+      // --- バトルスタミナ回復 ---
+      const diffBattleHours = Math.floor((now - lastBattleRecovery) / (1000 * 60 * 60));
+      if (diffBattleHours > 0 && battleStamina < maxStamina) {
+        // 回復できる回数（スタミナ上限を超えない）
+        const recoverCount = Math.min(diffBattleHours, maxStamina - battleStamina);
+
+        // スタミナ回復
+        battleStamina += recoverCount;
+
+        // lastBattleRecovery を「回復した分だけ」進める
+        lastBattleRecovery += recoverCount * (1000 * 60 * 60);
+      }
+
+      // --- 次回回復までの残り時間（個別） ---
+      const nextBattleRecovery = lastBattleRecovery + 1000 * 60 * 60;
+
+      const remainingBattle = battleStamina >= maxStamina
+        ? "満タン"
+        : `${Math.max(0, Math.floor((nextBattleRecovery - now) / (1000 * 60)))} 分`;
+
+      // --- 表示更新 ---
+      document.getElementById("battleStaminaText").innerText = `${battleStamina}/${maxStamina}`;
+
+      document.getElementById("battleStaminaBar").style.width = `${(battleStamina / maxStamina) * 100}%`;
+
+      document.getElementById("nextBattleRecoveryText").innerText = `スタミナ回復まで：${remainingBattle}`;
+
+      // ★変更：満タン時だけテキスト色を変える
+      const battleText = document.getElementById("nextBattleRecoveryText");
+
+      if (battleStamina >= maxStamina) {
+        battleText.classList.add("full");   // ★追加
+      } else {
+        battleText.classList.remove("full"); // ★追加
+      }
+    }
+
+    // -------------------------
+    // キャラクター表示
+    // -------------------------
+    function renderPage() {
+      const start = (currentPage - 1) * pageSize;
+      const end = start + pageSize;
+      const pageCharacters = characters.slice(start, end);
+
+      const area = document.getElementById("charactersArea");
+      area.innerHTML = "";
+
+      pageCharacters.forEach(ch => {
+        const div = document.createElement("div");
+        const createdAtLocal = new Date(ch.createdAt).toLocaleString();
+        div.className = "myCharCard";
+
+        div.innerHTML = `
+          <input type="checkbox" name="charSelect" value="${ch.characterId}">
+          <h3>${ch.name}</h3>
+          <p>基礎魔力量：${ch.baseDice}</p>
+          <h4>属性 ／ レベル ／ 発動抵抗 ／ 最大威力 </h4>
+          <ul> 
+            ${Object.keys(ch.events).map(i => `
+              <li>
+                ${MAGIC_ATTRIBUTES[i]} ／ ${ch.events[i].dice} ／ ${ch.events[i].critical} ／ ${ch.events[i].maxAchieve}
+              </li>
+            `).join("")}
+          </ul>
+          <p>
+          最大総合威力：${ch.maxTotalAchieve}<br>
+          バトル経験値：${ch.battleExp}<br>
+          入学日時：${createdAtLocal}<br>
+          入学Ver：${ch.createdVersion}
+          </p>
+        `;
+        area.appendChild(div);
+      });
+
+      const totalPages = Math.ceil(characters.length / pageSize);
+      document.getElementById("pageInfo").innerText = `${currentPage} / ${totalPages}`;
+    }
+
+    // ページング
+    document.getElementById("prevPage").onclick = () => {
+      if (currentPage > 1) {
+        currentPage--;
+        renderPage();
+      }
+    };
+    document.getElementById("nextPage").onclick = () => {
+      const totalPages = Math.ceil(characters.length / pageSize);
+      if (currentPage < totalPages) {
+        currentPage++;
+        renderPage();
+      }
+    };
+
+    // -------------------------
+    // バトル開始
+    // -------------------------
+    document.getElementById("battleBtn").onclick = () => {
+      const selectedList = document.querySelectorAll('input[name="charSelect"]:checked');
+
+      if (selectedList.length === 0) {
+        alert("自分の生徒を選択してください");
+        return;
+      }
+
+      if (selectedList.length > 1) {
+        alert("対戦する生徒は同時に1体のみ選択可能です。1体だけ選択してください。");
+        return;
+      }
+
+      const enemyAttrId = document.getElementById("enemySelect").value;
+
+      sessionStorage.setItem("selectedCharId", selectedList[0].value);
+      sessionStorage.setItem("enemyAttrId", enemyAttrId); // ★追加：対戦相手の属性ID
+      if (String(enemyAttrId) == "0") {
+        location.href = "battle4_1.html";
+      } else {
+        location.href = "battle.html";
+      }
+    };
+    // -------------------------
+    // シナリオ開始
+    // -------------------------
+    document.getElementById("scenarioBtn").onclick = () => {
+      const selectedList = document.querySelectorAll('input[name="charSelect"]:checked');
+
+      if (selectedList.length === 0) {
+        alert("自分の生徒を選択してください");
+        return;
+      }
+
+      if (selectedList.length > 1) {
+        alert("対戦する生徒は同時に1体のみ選択可能です。1体だけ選択してください。");
+        return;
+      }
+
+      const scenarioId = document.getElementById("scenarioSelect").value;
+
+      sessionStorage.setItem("selectedCharId", selectedList[0].value);
+      sessionStorage.setItem("scenarioId", scenarioId);
+      sessionStorage.setItem("battleId", 0);
+      const href = "scenario" + scenarioId + ".html";
+      location.href = href;
+    };
+
+    // -------------------------
+    // チャンピオン表示
+    // -------------------------
+    async function loadChampions() {
+      const area = document.getElementById("championsArea");
+
+      // ★ キャラ情報を取得
+      async function loadCharacterInfo(charId) {
+        const charSnap = await db.collection("characters")
+          .doc(String(charId))
+          .get();
+
+        return charSnap.exists ? charSnap.data() : null;
+      }
+
+      // ★ プレイヤー名を取得
+      async function loadPlayerName(playerId) {
+        const playerSnap = await db.collection("players")
+          .doc(playerId)
+          .get();
+
+        return playerSnap.exists ? playerSnap.data().name : "不明なプレイヤー";
+      }
+      // チャンピオンが自分のキャラならハイライト表示
+      function highlightCreator(name, playerId) {
+        if (playerId === currentUserId) {
+          return `<strong style="color:red; font-weight:bold;">${name}</strong>`;
+        }
+        return name;
+      }
+
+      for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
+        const attrName = MAGIC_ATTRIBUTES[attrId];
+
+        // 勝ち抜きチャンピオン
+        const champSnap = await db.collection("champions").doc(attrId).get();
+        let champHtml = "";
+        let champChar = null;
+
+        if (champSnap.exists) {
+          const data = champSnap.data();
+          champChar = await loadCharacterInfo(data.championId);
+          // ★ 属性ごとの critical を取得
+          const critical = champChar.events && champChar.events[attrId]
+            ? champChar.events[attrId].critical
+            : "不明";
+
+          // ★ 属性ごとの dice を取得
+          const dice = champChar.events && champChar.events[attrId]
+            ? champChar.events[attrId].dice
+            : "不明";
+            
+          // ★ 属性ごとの maxAchieve を取得
+          const maxAchieve = champChar.events && champChar.events[attrId]
+            ? champChar.events[attrId].maxAchieve
+            : "不明";
+
+          if (champChar) {
+            const creatorName = await loadPlayerName(champChar.playerId);
+            const creatorDisplay = highlightCreator(creatorName, champChar.playerId);
+
+            champHtml = `
+              <p>
+                <strong>${MAGIC_ATTRIBUTE_CHAMPION[attrId]}(勝ち抜き)</strong><br>
+                連勝数：${data.winStreak}<br>
+                生徒名：${champChar.name}<br>
+                担当教授：${creatorDisplay}<br>
+                基礎魔力量：${champChar.baseDice}<br>
+                <h4>属性 ／ レベル ／ 発動抵抗 ／ 最大威力 </h4>
+                <ul>
+                <li>
+                  ${MAGIC_ATTRIBUTES[attrId]} ／ ${dice} ／ ${critical} ／ ${maxAchieve}
+                </li>
+                </ul>
+              </p>
+            `;
+          } else {
+            champHtml = `<p>勝ち抜き最優秀生徒：生徒情報が見つかりません</p>`;
+          }
+        } else {
+          champHtml = `<p>勝ち抜き最優秀生徒：未設定</p>`;
+        }
+
+        // 最大魔法威力チャンピオン
+        const maxSnap = await db.collection("maxAchieveChampions").doc(attrId).get();
+        let maxHtml = "";
+        let maxChar = null;
+
+        if (maxSnap.exists) {
+          const data = maxSnap.data();
+          const maxChar = await loadCharacterInfo(data.championId);
+          // ★ 属性ごとの critical を取得
+          const critical = maxChar.events && maxChar.events[attrId]
+            ? maxChar.events[attrId].critical
+            : "不明";
+
+          // ★ 属性ごとの dice を取得
+          const dice = maxChar.events && maxChar.events[attrId]
+            ? maxChar.events[attrId].dice
+            : "不明";
+
+          if (maxChar) {
+            const creatorName = await loadPlayerName(maxChar.playerId);
+            const creatorDisplay = highlightCreator(creatorName, maxChar.playerId);
+
+            maxHtml = `
+              <p>
+                <strong>${MAGIC_ATTRIBUTE_MAXDAMAGE[attrId]}(最大威力)</strong><br>
+                生徒名：${maxChar.name}<br>
+                担当教授：${creatorDisplay}<br>
+                基礎魔力量：${maxChar.baseDice}<br>
+                <h4>属性 ／ レベル ／ 発動抵抗 ／ 最大威力 </h4>
+                <ul>
+                <li>
+                  ${MAGIC_ATTRIBUTES[attrId]} ／ ${dice} ／ ${critical} ／ ${data.maxAchieve}
+                </li>
+                </ul>
+              </p>
+            `;
+          } else {
+            maxHtml = `<p>最大威力最優秀生徒：生徒情報が見つかりません</p>`;
+          }
+        } else {
+          maxHtml = `<p>最大威力最優秀生徒：未設定</p>`;
+        }
+
+        // まとめて表示
+        const div = document.createElement("div");
+        div.className = "champCard";
+
+        // ★ 属性カラーを適用
+        div.style.setProperty("--attr-color", MAGIC_ATTRIBUTE_COLORS[attrId]);
+
+        div.innerHTML = `
+          <h3>属性：${attrName}</h3>
+          ${champHtml}
+          ${maxHtml}
+        `;
+        area.appendChild(div);
+      }
+    }
+    // -------------------------
+    // 全属性チャンピオン表示
+    // -------------------------
+    async function loadallChampions() {
+      const area = document.getElementById("championsArea");
+
+      // ★ キャラ情報を取得
+      async function loadCharacterInfo(charId) {
+        const charSnap = await db.collection("characters")
+          .doc(String(charId))
+          .get();
+
+        return charSnap.exists ? charSnap.data() : null;
+      }
+
+      // ★ プレイヤー名を取得
+      async function loadPlayerName(playerId) {
+        const playerSnap = await db.collection("players")
+          .doc(playerId)
+          .get();
+
+        return playerSnap.exists ? playerSnap.data().name : "不明なプレイヤー";
+      }
+      // チャンピオンが自分のキャラならハイライト表示
+      function highlightCreator(name, playerId) {
+        if (playerId === currentUserId) {
+          return `<strong style="color:red; font-weight:bold;">${name}</strong>`;
+        }
+        return name;
+      }
+      // 勝ち抜きチャンピオン
+      const champSnap = await db.collection("champions").doc("0").get();
+      let champHtml = "";
+      let champChar = null;
+      if (champSnap.exists) {
+        const data = champSnap.data();
+        champChar = await loadCharacterInfo(data.championId);
+        if (champChar) {
+          const creatorName = await loadPlayerName(champChar.playerId);
+          const creatorDisplay = highlightCreator(creatorName, champChar.playerId);
+
+          //基本情報
+          champHtml = `
+            <p>
+              <strong>${MAGIC_ATTRIBUTE_CHAMPION[0]}(勝ち抜き)</strong><br>
+              連勝数：${data.winStreak}<br>
+              生徒名：${champChar.name}<br>
+              担当教授：${creatorDisplay}<br>
+              基礎魔力量：${champChar.baseDice}<br>
+              <h4>属性 ／ レベル ／ 発動抵抗 ／ 最大威力 </h4>
+              <ul>
+          `;
+
+          //各属性情報
+          for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
+            const attrName = MAGIC_ATTRIBUTES[attrId];
+            // ★ 属性ごとの critical を取得
+            const critical = champChar.events && champChar.events[attrId]
+              ? champChar.events[attrId].critical
+              : "不明";
+
+            // ★ 属性ごとの dice を取得
+            const dice = champChar.events && champChar.events[attrId]
+              ? champChar.events[attrId].dice
+              : "不明";
+              
+            // ★ 属性ごとの maxAchieve を取得
+            const maxAchieve = champChar.events && champChar.events[attrId]
+              ? champChar.events[attrId].maxAchieve
+              : "不明";
+
+            champHtml += `
+              <li>
+                ${MAGIC_ATTRIBUTES[attrId]} ／ ${dice} ／ ${critical} ／ ${maxAchieve}
+              </li>
+            `;
+          }
+          //基本情報
+          champHtml += `
+              </ul>
+              最大総合威力：${champChar.maxTotalAchieve}<br>
+          `;
+        }else {
+          champHtml = `<p>勝ち抜き最優秀生徒：生徒情報が見つかりません</p>`;
+        }
+      } else {
+        champHtml = `<p>勝ち抜き最優秀生徒：未設定</p>`;
+      }
+
+      // 最大魔法威力チャンピオン
+      const maxSnap = await db.collection("maxAchieveChampions").doc("0").get();
+      let maxHtml = "";
+      let maxChar = null;
+
+      if (maxSnap.exists) {
+        const data = maxSnap.data();
+        const maxChar = await loadCharacterInfo(data.championId);
+        if (maxChar) {
+          const creatorName = await loadPlayerName(maxChar.playerId);
+          const creatorDisplay = highlightCreator(creatorName, maxChar.playerId);
+
+          //基本情報
+          maxHtml = `
+            <p>
+              <strong>${MAGIC_ATTRIBUTE_MAXDAMAGE[0]}(最大総合威力)</strong><br>
+              生徒名：${maxChar.name}<br>
+              担当教授：${creatorDisplay}<br>
+              基礎魔力量：${maxChar.baseDice}<br>
+              <h4>属性 ／ レベル ／ 発動抵抗 ／ 最大威力 </h4>
+              <ul>
+          `;
+
+          //各属性情報
+          for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
+            const attrName = MAGIC_ATTRIBUTES[attrId];
+            // ★ 属性ごとの critical を取得
+            const critical = maxChar.events && maxChar.events[attrId]
+              ? maxChar.events[attrId].critical
+              : "不明";
+
+            // ★ 属性ごとの dice を取得
+            const dice = maxChar.events && maxChar.events[attrId]
+              ? maxChar.events[attrId].dice
+              : "不明";
+              
+            // ★ 属性ごとの maxAchieve を取得
+            const maxAchieve = maxChar.events && maxChar.events[attrId]
+              ? maxChar.events[attrId].maxAchieve
+              : "不明";
+
+            maxHtml += `
+              <li>
+                ${MAGIC_ATTRIBUTES[attrId]} ／ ${dice} ／ ${critical} ／ ${maxAchieve}
+              </li>
+            `;
+          }
+          //基本情報
+          maxHtml += `
+              </ul>
+              最大総合威力：${data.maxAchieve}<br>
+          `;
+        } else {
+          maxHtml = `<p>最大総合威力最優秀生徒：生徒情報が見つかりません</p>`;
+        }
+      } else {
+        maxHtml = `<p>最大総合威力最優秀生徒：未設定</p>`;
+      }
+
+      // まとめて表示
+      const div = document.createElement("div");
+      div.className = "champCard";
+
+      // ★ 属性カラーを適用
+      div.style.setProperty("--attr-color", MAGIC_ATTRIBUTE_COLORS[0]);
+
+      div.innerHTML = `
+        <h3>全属性</h3>
+        ${champHtml}
+        ${maxHtml}
+      `;
+      area.appendChild(div);
+    }
+    // -------------------------
+    // 属性チャンピオン選択肢をバトル相手コンボボックスに追加
+    // -------------------------
+    function loadEnemySelect() {
+      const select = document.getElementById("enemySelect");
+      select.innerHTML = ""; // 初期化
+
+      for (const attrId of Object.keys(MAGIC_ATTRIBUTE_CHAMPION)) {
+        const option = document.createElement("option");
+        option.value = attrId;
+        option.textContent = MAGIC_ATTRIBUTE_CHAMPION[attrId];
+        select.appendChild(option);
+      }
+    }
+    // -------------------------
+    // シナリオ選択コンボボックスに追加
+    // -------------------------
+    function loadScenarioSelect() {
+      const select = document.getElementById("scenarioSelect");
+      select.innerHTML = ""; // 初期化
+
+      for (const attrId of Object.keys(SCENARIO_NAME)) {
+        const option = document.createElement("option");
+        option.value = attrId;
+        option.textContent = SCENARIO_NAME[attrId];
+        select.appendChild(option);
+      }
+    }
+    // -------------------------
+    // キャラクター強化 2026/09/25
+    // -------------------------
+    document.getElementById("character_edit").onclick = () => {
+      const selectedList = document.querySelectorAll('input[name="charSelect"]:checked');
+
+      if (selectedList.length === 0) {
+        alert("指導する（強化）生徒を選択してください");
+        return;
+      }
+
+      if (selectedList.length > 1) {
+        alert("指導する生徒は同時に1体のみ選択可能です。1体だけ選択してください。");
+        return;
+      }
+      sessionStorage.setItem("selectedCharId", selectedList[0].value);
+      location.href = "character_edit.html";
+    };
+
+    // -------------------------
+    // キャラクター削除
+    // -------------------------
+    document.getElementById("character_delete").onclick = async () => {
+      const selectedList = document.querySelectorAll('input[name="charSelect"]:checked');
+
+      if (selectedList.length === 0) {
+        alert("卒業する（削除）生徒を選択してください");
+        return;
+      }
+
+      if (selectedList.length > 1) {
+        alert("卒業する生徒は同時に1体のみ選択可能です。1体だけ選択してください。");
+        return;
+      }
+
+      // ★ ここだけ修正：数値化する
+      const charId = Number(selectedList[0].value);
+
+      // ★ 勝ち抜きチャンピオン判定
+      let isChampion = false;
+
+      for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
+        const snap = await db.collection("champions").doc(attrId).get();
+        if (snap.exists && Number(snap.data().championId) === charId) {
+          isChampion = true;
+        }
+      }
+
+      // ★ 最大威力チャンピオン判定
+      for (const attrId of Object.keys(MAGIC_ATTRIBUTES)) {
+        const snap = await db.collection("maxAchieveChampions").doc(attrId).get();
+        if (snap.exists && Number(snap.data().championId) === charId) {
+          isChampion = true;
+        }
+      }
+
+      if (isChampion) {
+        alert("この生徒は覇者もくしは王のため卒業できません");
+        return;
+      }
+
+      const ok = confirm("生徒を卒業（削除）させてもよろしいですか？");
+      if (!ok) return;
+
+      // --- キャラデータ取得（削除前に必ず取る） ---
+      const charSnap = await db.collection("characters").doc(String(charId)).get();
+      if (!charSnap.exists) {
+        alert("キャラデータが見つかりません");
+        return;
+      }
+
+      const charData = charSnap.data();
+      const charExp = charData.battleExp || 0;
+
+      // --- プレイヤーデータ取得 ---
+      const playerId = auth.currentUser.uid;
+      const playerRef = db.collection("players").doc(playerId);
+      const playerSnap = await playerRef.get();
+      const playerData = playerSnap.data() || {};
+      const playerExp = playerData.battleExp || 0;
+
+      // --- キャラ削除 ---
+      await db.collection("characters").doc(String(charId)).delete();
+
+      // --- キャラの経験値が 0 でなければ加算する ---
+      if (charExp > 0) {
+        await playerRef.update({
+          battleExp: playerExp + charExp
+        });
+
+        alert(`生徒が卒業しました。\n生徒の経験値 ${charExp} をプレイヤーの指導実績に加算しました！`);
+      } else {
+        alert("生徒が卒業しました");
+      }
+      location.reload();
+    };
+
+    // ページ読み込み時に実行
+    window.onload = () => {
+      const madouName = MAGIC_ATTRIBUTE_CHAMPION[0];
+      const description = `
+        バトルを開始するには、まず自分の生徒を選択し、<br>
+        対戦したい相手を選んでください。<br><br>
+        ${madouName} が対戦相手の場合は4つの属性全てで対戦を行います。<br>
+        それ以外の場合は指定の属性のみで対戦を行います。
+      `;
+      battleDescription.innerHTML = description;
+      const scenarioDescription = `
+        シナリオを開始するには、まず自分の生徒を選択し、<br>
+        シナリオを選んでください。
+      `;
+      scenarioDescription.innerHTML = scenarioDescription;
+
+      loadallChampions();
+      loadChampions();
+    };
+
+    //リロード
+    document.getElementById("reloadBtn").onclick = () => {
+      location.reload();
+    };
+
+    // ログアウト
+    function logout() {
+      auth.signOut().then(() => location.href = "index.html");
+    }
+
+    //help表示
+    document.getElementById("helpBtn").onclick = openHelpModal;
+  </script>
+</body>
+</html>
