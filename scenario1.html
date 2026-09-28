@@ -217,8 +217,11 @@
         case 3:
           if (scenarioWinFlag === "true") {
             document.getElementById("scene7_win").classList.remove("hidden");
-          }else{
-            document.getElementById("scene7_lose").classList.remove("hidden");
+            const myId = sessionStorage.getItem("selectedCharId");
+            const myRef = db.collection("characters").doc(myId);
+            await myRef.update({
+              ["scenario.1.clearFlag"]: true
+            });
           }
           break;
         default:
