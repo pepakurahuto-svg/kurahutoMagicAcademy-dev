@@ -375,6 +375,7 @@
       const scenarioId = document.getElementById("scenarioSelect").value;
 
       sessionStorage.setItem("selectedCharId", selectedList[0].value);
+      sessionStorage.setItem("scenarioId", scenarioId);
       sessionStorage.setItem("battleId", 0);
       const href = "scenario" + scenarioId + ".html";
       location.href = href;

@@ -7,6 +7,7 @@
     body { font-family: sans-serif; line-height: 1.6; }
     .scene { margin-bottom: 24px; }
     .dialog { margin-left: 1em; }
+    .hidden { display: none; }
     button { margin: 6px 4px; }
   </style>
 </head>
@@ -180,6 +181,10 @@
 
     let myAchieve = null;
     let enemyAchieve = null;
+    
+    let scenarioId = null;
+    let battleId = null;
+    let scenarioWinFlag = null;
     // -------------------------
     // 情報読み込み
     // -------------------------
@@ -192,18 +197,53 @@
       //自分のプレイヤーデータセット
       playerRef = db.collection("players").doc(user.uid);
 
-      sessionStorage.setItem("battleId", battleId);
-        // battleId 1,2,3 はスタミナ消費なし
-        if ([1, 2, 3].includes(battleId)) {
-        // 何もしない
-        } else {
-            const ok = await consumeStamina(playerRef,2);
-            if (!ok) {
-                location.href = "player_home.html";
-                return;
-            }
-        }
+      scenarioId = sessionStorage.getItem("scenarioId");
+      battleId = sessionStorage.getItem("battleId");
+      scenarioWinFlag = sessionStorage.getItem("scenarioWinFlag");
+
+      switch (battleId) {
+        case 0:
+          document.getElementById("scene1").classList.remove("hidden");
+          break;
+        case 1:
+          if (scenarioWinFlag) {
+            document.getElementById("scene3_win").classList.remove("hidden");
+          }else{
+            document.getElementById("scene3_lose").classList.remove("hidden");
+          }
+          break;
+        case 2:
+          if (scenarioWinFlag) {
+            document.getElementById("scene5_win").classList.remove("hidden");
+          }else{
+            document.getElementById("scene5_lose").classList.remove("hidden");
+          }
+          break;
+        case 3:
+          if (scenarioWinFlag) {
+            document.getElementById("scene7_win").classList.remove("hidden");
+          }else{
+            document.getElementById("scene7_lose").classList.remove("hidden");
+          }
+          break;
+        default:
+          break;
+      }
+      // battleId 1,2,3 はスタミナ消費なし
+      if ([1, 2, 3].includes(battleId)) {
+      // 何もしない
+      } else {
+          const ok = await consumeStamina(playerRef,2);
+          if (!ok) {
+              location.href = "player_home.html";
+              return;
+          }
+      }
     });
+
+    // ページ読み込み時に実行
+    window.onload = () => {
+    };
   </script>
 </body>
 </html>
