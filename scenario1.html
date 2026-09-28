@@ -206,21 +206,21 @@
           document.getElementById("scene1").classList.remove("hidden");
           break;
         case 1:
-          if (scenarioWinFlag) {
+          if (scenarioWinFlag === "true") {
             document.getElementById("scene3_win").classList.remove("hidden");
           }else{
             document.getElementById("scene3_lose").classList.remove("hidden");
           }
           break;
         case 2:
-          if (scenarioWinFlag) {
+          if (scenarioWinFlag === "true") {
             document.getElementById("scene5_win").classList.remove("hidden");
           }else{
             document.getElementById("scene5_lose").classList.remove("hidden");
           }
           break;
         case 3:
-          if (scenarioWinFlag) {
+          if (scenarioWinFlag === "true") {
             document.getElementById("scene7_win").classList.remove("hidden");
           }else{
             document.getElementById("scene7_lose").classList.remove("hidden");
@@ -232,9 +232,11 @@
       // battleId 1,2,3 はスタミナ消費なし
       if ([1, 2, 3].includes(Number(battleId))) {
       // 何もしない
+        alert("スタミナ消費なし");
       } else {
           const ok = await consumeStamina(playerRef,2);
           if (!ok) {
+              alert("スタミナ消費");
               location.href = "player_home.html";
               return;
           }
@@ -253,6 +255,7 @@
     document.getElementById("battle1").onclick = () => {
       sessionStorage.setItem("enemyId", 1);//初心者君
       sessionStorage.setItem("enemyAttrId", 1);//火属性バトル
+      sessionStorage.setItem("battleId", 1);//1戦目
       location.href = "scenario_battle.html";
     };
 
