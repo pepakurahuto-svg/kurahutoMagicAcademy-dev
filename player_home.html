@@ -156,6 +156,12 @@
   <label for="enemySelect">対戦相手：</label>
   <select id="enemySelect"></select><br><br>
   <button id="battleBtn">バトル開始</button><br><br>
+  <!-- ★ シナリオ説明文 -->
+  <p id="scenarioDescription">
+  </p>
+  <label for="scenarioSelect">シナリオ：</label>
+  <select id="scenarioSelect"></select><br><br>
+  <button id="scenarioBtn">シナリオ開始</button><br><br>
   <button id="character_edit">生徒指導（強化）</button><br><br>
   <button id="character_delete">生徒卒業（削除）</button><br><br>
   <button id="helpBtn">ヘルプ</button>
@@ -218,6 +224,7 @@
       characters = snap.docs.map(doc => doc.data());
       renderPage();
       loadEnemySelect(); // コンボボックスに選択肢を入れる
+      loadScenarioSelect(); // コンボボックスに選択肢を入れる
 
       // 🔹 スタミナ表示を定期更新（リロードなし）
       setInterval(updateStaminaDisplay, 1000);
@@ -348,6 +355,29 @@
       } else {
         location.href = "battle.html";
       }
+    };
+    // -------------------------
+    // シナリオ開始
+    // -------------------------
+    document.getElementById("scenarioBtn").onclick = () => {
+      const selectedList = document.querySelectorAll('input[name="charSelect"]:checked');
+
+      if (selectedList.length === 0) {
+        alert("自分の生徒を選択してください");
+        return;
+      }
+
+      if (selectedList.length > 1) {
+        alert("対戦する生徒は同時に1体のみ選択可能です。1体だけ選択してください。");
+        return;
+      }
+
+      const scenarioId = document.getElementById("scenarioSelect").value;
+
+      sessionStorage.setItem("selectedCharId", selectedList[0].value);
+      sessionStorage.setItem("battleId", 0);
+      const href = "battle" + scenarioId + ".html";
+      location.href = href;
     };
 
     // -------------------------
@@ -668,6 +698,20 @@
       }
     }
     // -------------------------
+    // シナリオ選択コンボボックスに追加
+    // -------------------------
+    function loadScenarioSelect() {
+      const select = document.getElementById("scenarioSelect");
+      select.innerHTML = ""; // 初期化
+
+      for (const attrId of Object.keys(SCENARIO_NAME)) {
+        const option = document.createElement("option");
+        option.value = attrId;
+        option.textContent = SCENARIO_NAME[attrId];
+        select.appendChild(option);
+      }
+    }
+    // -------------------------
     // キャラクター強化 2026/09/25
     // -------------------------
     document.getElementById("character_edit").onclick = () => {
@@ -774,6 +818,11 @@
         それ以外の場合は指定の属性のみで対戦を行います。
       `;
       battleDescription.innerHTML = description;
+      const scenarioDescription = `
+        シナリオを開始するには、まず自分の生徒を選択し、<br>
+        シナリオを選んでください。
+      `;
+      scenarioDescription.innerHTML = scenarioDescription;
 
       loadallChampions();
       loadChampions();

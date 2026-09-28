@@ -32,3 +32,8 @@ const MAGIC_ATTRIBUTE_MAXDAMAGE = {
   3: "風壊王", // 風
   4: "土壊王"  // 土
 };
+
+// シナリオ
+const SCENARIO_NAME = {
+  1: "力試しミニトーナメント"
+};
