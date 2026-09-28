@@ -258,7 +258,86 @@
       sessionStorage.setItem("battleId", 1);//1戦目
       location.href = "scenario_battle.html";
     };
-
+    // -------------------------
+    // シーン3win
+    // -------------------------
+    document.getElementById("next2").onclick = () => {
+      document.getElementById("scene3_win").classList.add("hidden");
+      document.getElementById("scene4").classList.remove("hidden");
+    };
+    // -------------------------
+    // シーン3lose
+    // -------------------------
+    document.getElementById("next2_fromLose").onclick = () => {
+      document.getElementById("scene3_lose").classList.add("hidden");
+      document.getElementById("scene8_lose").classList.remove("hidden");
+    };
+    // -------------------------
+    // シーン4
+    // -------------------------
+    document.getElementById("battle2").onclick = () => {
+      sessionStorage.setItem("enemyId", 2);//その２君
+      sessionStorage.setItem("enemyAttrId", 2);//水属性バトル
+      sessionStorage.setItem("battleId", 2);//2戦目
+      location.href = "scenario_battle.html";
+    };
+    // -------------------------
+    // シーン5win
+    // -------------------------
+    document.getElementById("next3").onclick = () => {
+      document.getElementById("scene5_win").classList.add("hidden");
+      document.getElementById("scene6").classList.remove("hidden");
+    };
+    // -------------------------
+    // シーン5lsoe
+    // -------------------------
+    document.getElementById("next3_fromLose").onclick = () => {
+      document.getElementById("scene5_lose").classList.add("hidden");
+      document.getElementById("scene8_lose").classList.remove("hidden");
+    };
+    // -------------------------
+    // シーン6
+    // -------------------------
+    document.getElementById("battle6").onclick = () => {
+      sessionStorage.setItem("enemyId", 3);//その２君
+      sessionStorage.setItem("enemyAttrId", 3);//風属性バトル
+      sessionStorage.setItem("battleId", 3);//3戦目
+      location.href = "scenario_battle.html";
+    };
+    // -------------------------
+    // シーン7win
+    // -------------------------
+    document.getElementById("next4").onclick = () => {
+      document.getElementById("scene7_win").classList.add("hidden");
+      document.getElementById("scene8_win").classList.remove("hidden");
+    };
+    // -------------------------
+    // シーン7lsoe
+    // -------------------------
+    document.getElementById("next4_fromLose").onclick = () => {
+      document.getElementById("scene7_lose").classList.add("hidden");
+      document.getElementById("scene8_lose").classList.remove("hidden");
+    };
+    // -------------------------
+    // シーン8win
+    // -------------------------
+    document.getElementById("backHomeWin").onclick = () => {
+      sessionStorage.setItem("enemyId", 1);//初心者君
+      sessionStorage.setItem("enemyAttrId", 1);//火属性バトル
+      sessionStorage.setItem("battleId", 0);
+      sessionStorage.setItem("scenarioId", scenarioId);
+      location.href = "player_home.html";
+    };
+    // -------------------------
+    // シーン8lose
+    // -------------------------
+    document.getElementById("backHomeLose").onclick = () => {
+      sessionStorage.setItem("enemyId", 1);//初心者君
+      sessionStorage.setItem("enemyAttrId", 1);//火属性バトル
+      sessionStorage.setItem("battleId", 0);
+      sessionStorage.setItem("scenarioId", scenarioId);
+      location.href = "player_home.html";
+    };
     // ページ読み込み時に実行
     window.onload = () => {
     };
