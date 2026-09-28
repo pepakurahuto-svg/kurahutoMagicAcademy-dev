@@ -253,7 +253,7 @@
     // シーン2
     // -------------------------
     document.getElementById("battle1").onclick = () => {
-      sessionStorage.setItem("enemyId", 1);//初心者君
+      sessionStorage.setItem("enemyId", SCENARIO1_CHARA[1]);//ミナト
       sessionStorage.setItem("enemyAttrId", 1);//火属性バトル
       sessionStorage.setItem("battleId", 1);//1戦目
       location.href = "scenario_battle.html";
@@ -276,7 +276,7 @@
     // シーン4
     // -------------------------
     document.getElementById("battle2").onclick = () => {
-      sessionStorage.setItem("enemyId", 2);//その２君
+      sessionStorage.setItem("enemyId", SCENARIO1_CHARA[2]);//ユリエ
       sessionStorage.setItem("enemyAttrId", 2);//水属性バトル
       sessionStorage.setItem("battleId", 2);//2戦目
       location.href = "scenario_battle.html";
@@ -299,7 +299,7 @@
     // シーン6
     // -------------------------
     document.getElementById("battle6").onclick = () => {
-      sessionStorage.setItem("enemyId", 3);//その２君
+      sessionStorage.setItem("enemyId", SCENARIO1_CHARA[3]);//カイ
       sessionStorage.setItem("enemyAttrId", 3);//風属性バトル
       sessionStorage.setItem("battleId", 3);//3戦目
       location.href = "scenario_battle.html";

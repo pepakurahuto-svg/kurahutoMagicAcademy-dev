@@ -37,3 +37,10 @@ const MAGIC_ATTRIBUTE_MAXDAMAGE = {
 const SCENARIO_NAME = {
   1: "力試しミニトーナメント"
 };
+
+// シナリオ1キャラ
+const SCENARIO1_CHARA = {
+  1: "37", //ミナト
+  2: "38", //ユリエ
+  3: "39" //カイ
+};
